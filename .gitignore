@@ -3,6 +3,7 @@
 /build/
 /dist/
 /*.egg-info/
+.DS_Store
 
 # twisted
 dropin.cache
