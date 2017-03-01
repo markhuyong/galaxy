@@ -29,7 +29,7 @@ class TestQqStatusOffline(TestCase):
                                     encoding='utf8')
 
             for item in self.spider.parse(response):
-                if not isinstance(item, QqStatusItem):
+                if isinstance(item, QqStatusItem):
                     self.assertEqual(item['text'], "lebooks")
                 else:
                     self.fail("returned item in not a instance of QqStatusItem.")
