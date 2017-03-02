@@ -16,10 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class CollectionSpider(CommonSpider):
-    name = "collection"
+    name = "jianshu_collection"
 
     page = 1
     max_page = 3
+
+    def __init__(self, *args, **kwargs):
+        super(CommonSpider, self).__init__(*args, **kwargs)
+
+        uid = kwargs.get('uid')
+        if uid:
+            self.logger.debug("uid item = {}".format(uid))
+            self.start_urls = [BaseHelper.get_collection_url(uid)]
 
     def parse(self, response):
         res = Selector(response)

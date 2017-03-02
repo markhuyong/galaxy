@@ -75,7 +75,7 @@ class ServiceResource(resource.Resource, object):
 
     def format_error_response(self, exception, request):
         return {
-            "status": "error",
+            "success": "false",
             "message": str(exception.message),
             "code": request.code
         }
@@ -235,13 +235,24 @@ class CrawlResource(ServiceResource):
     def prepare_response(self, result, *args, **kwargs):
         items = result.get("items")
         response = {
-            "status": "ok",
+            "success": "true",
             "items": items,
-            "items_dropped": result.get("items_dropped", []),
-            "stats": result.get("stats"),
-            "spider_name": result.get("spider_name"),
         }
+
+        items_dropped = result.get("items_dropped")
+        if items_dropped:
+            response['items_dropped'] = items_dropped
+
+        stats = result.get("stats")
+        if items_dropped:
+            response['stats'] = stats
+
+        spider_name = result.get("spider_name")
+        if spider_name:
+            response['spider_name'] = spider_name
+
         errors = result.get("errors")
         if errors:
+            response["success"] = "false"
             response["errors"] = errors
         return response

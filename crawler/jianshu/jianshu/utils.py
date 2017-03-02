@@ -11,6 +11,8 @@ from crawler.misc import agents
 class BaseHelper(object):
     BASE = "www.jianshu.com"
     BASE_URL = "http://{}".format(BASE)
+    USER_URL = "{base}/u/{{uid}}".format(base=BASE_URL)
+    COLLECTION_URL = "{base}/{{cid}}".format(base=BASE_URL)
     LECTURES_URL = "{base}/users/{{uid}}/collections_and_notebooks?slug={{uid}}".format(base=BASE_URL)
     COLLECTION_SUFFIX = "?order_by=commented_at&page={}"
 
@@ -24,6 +26,14 @@ class BaseHelper(object):
             'Host': cls.BASE,
         })
 
-    @staticmethod
-    def _get_user_agent():
-        return str(random.choice(agents.AGENTS))
+    @classmethod
+    def get_lectures_url(cls, uid):
+        return cls.LECTURES_URL.format(uid=uid)
+
+    @classmethod
+    def get_user_url(cls, uid):
+            return cls.USER_URL.format(uid=uid)
+
+    @classmethod
+    def get_collection_url(cls, cid):
+        return cls.COLLECTION_URL.format(cid=cid)

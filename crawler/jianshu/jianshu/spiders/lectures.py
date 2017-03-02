@@ -16,7 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class LectureSpider(CommonSpider):
-    name = "lectures"
+    name = "jianshu_lectures"
+
+    def __init__(self, *args, **kwargs):
+        super(CommonSpider, self).__init__(*args, **kwargs)
+
+        uid = kwargs.get('uid')
+        if uid:
+            self.logger.debug("uid item = {}".format(uid))
+            self.start_urls = [BaseHelper.get_user_url(uid)]
 
     def parse(self, response):
         uid = response.request.url.split('/')[-1]

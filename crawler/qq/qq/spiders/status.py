@@ -54,6 +54,9 @@ class QqStatusSpider(CommonSpider):
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
+        if remain_count > 0:
+            next_page = BaseHelper.get_shuoshuo_url(self.uid, last_attach)
+            yield Request(next_page)
 
         # get user text and photos
         for feed in body['data']['vFeeds']:
