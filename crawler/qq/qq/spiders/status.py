@@ -26,9 +26,6 @@ sys.setdefaultencoding('utf8')
 class QqStatusSpider(CommonSpider):
     name = "qq_status"
 
-    COUNT_REGEXP = "\"count\":\s*{[^}]*}{1}"
-    PROFILE_REGEXP = "\"profile\":\s*{[^}]*}{1}"
-
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)
 
