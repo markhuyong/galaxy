@@ -11,11 +11,11 @@ from scrapy.item import Item, Field
 class ProfileItem(Item):
     nick_name = Field()
     profile_image = Field()
-    uid  = Field()
+    uid = Field()
+
 
 class QQProfileItem(ProfileItem):
     blog = Field()
     message = Field()
     pic = Field()
     shuoshuo = Field()
-

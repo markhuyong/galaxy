@@ -1,20 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import datetime
-import requests
-import re
-from lxml import etree
-from scrapy import Selector
-from scrapy.http.cookies import CookieJar
-from scrapy.linkextractors import LinkExtractor
-
-from scrapy.conf import settings
 from scrapy.http.request import Request
 import json
 
 from crawler.qq.qq.items import PictureItem, QqStatusItem
-from ..profile_items import QQProfileItem
 
 from ..utils import CommonSpider
 from ..utils import BaseHelper
@@ -35,7 +25,7 @@ class QqPhotoSpider(CommonSpider):
         if uid:
             self.logger.debug("uid item = {}".format(uid))
             self.uid = uid
-            self.start_urls = [BaseHelper.get_photo_url(uid)]
+            self.start_urls = [BaseHelper.get_album_url(uid)]
 
     def parse(self, response):
         try:
@@ -62,8 +52,8 @@ class QqPhotoSpider(CommonSpider):
                         else last_fetch_size
                     last_attach_temp = last_attach if n > 0 else None
                     photo_url = BaseHelper.get_photo_url(self.uid, album_id,
-                                                         already_fetch_num,
-                                                         fetch_batch_size,
+                                                         str(already_fetch_num),
+                                                         str(fetch_batch_size),
                                                          last_attach_temp)
                     yield Request(photo_url, self.parse_photo)
 

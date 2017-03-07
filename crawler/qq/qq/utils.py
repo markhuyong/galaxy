@@ -66,7 +66,7 @@ class BaseHelper(object):
     def get_photo_url(cls, uid, album_id, ps, pn, last_attach=None):
         url = cls.PHOTO_URL.replace("USER_QQ_NUMBER", uid) \
             .replace("ALBUMID", album_id) \
-            .replace("PS", ps + "") \
-            .replace("PN", pn + "")
+            .replace("PS", ps) \
+            .replace("PN", pn)
         return url if last_attach is None \
             else url + "&res_attach=" + unicode(str(last_attach), "UTF-8")

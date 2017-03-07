@@ -1,17 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import logging
-import datetime
-import requests
-import re
-from lxml import etree
-from scrapy import Selector
-from scrapy.http.cookies import CookieJar
-from scrapy.linkextractors import LinkExtractor
-from scrapy.exceptions import CloseSpider
-
-from scrapy.conf import settings
 from scrapy.http.request import Request
 import json
 from ..items import QqStatusItem
@@ -36,13 +25,6 @@ class QqStatusSpider(CommonSpider):
             self.start_urls = [BaseHelper.get_shuoshuo_url(uid)]
 
     def parse(self, response):
-        # self.logger.debug("response.body======={}".format(response.body))
-        # if "nav_bar_me" in response.body:
-        #     self.logger.debug("Login successful")
-        # else:
-        #     self.logger.debug("Login failed")
-
-        # raise CloseSpider('termination condition met')
         body = json.loads(response.body)
 
         self.logger.debug("body======={}".format(body))
@@ -61,7 +43,7 @@ class QqStatusSpider(CommonSpider):
             item['published_at'] = feed['comm']['time']
             item['text'] = feed['operation']['share_info']['summary']
 
-            #get photo urls
+            # get photo urls
             if 'pic' in feed:
                 pictures = []
                 for picdata in feed['pic']['picdata']['pic']:
@@ -90,5 +72,3 @@ class QqStatusSpider(CommonSpider):
 
             print("item*======={}", item)
             yield item
-
-            # return item
