@@ -24,7 +24,7 @@ sys.setdefaultencoding('utf8')
 
 
 class QqStatusSpider(CommonSpider):
-    name = "qq_status"
+    name = "qq_user_status"
 
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)

@@ -9,8 +9,8 @@ from crawler.misc import agents
 
 
 class BaseHelper(object):
-    BASE_URL = "http://www.jianshu.com"
-    LECTURES_URL = "{base}/users/{{uid}}/collections_and_notebooks?slug={{uid}}".format(base=BASE_URL)
+    WEIBO_LIST_PAGE_URL_PREFIX = "http://weibo.cn/u/{uid}?page={page}"
+    WEIBO_SEARCH_URL = "http://weibo.cn/search/user/?keyword={nickname}"
 
     @classmethod
     def get_headers(cls):
@@ -22,6 +22,10 @@ class BaseHelper(object):
             # 'Host': cls.BASE_URL,
         })
 
-    @staticmethod
-    def _get_user_agent():
-        return str(random.choice(agents.AGENTS))
+    @classmethod
+    def get_common_page_url(cls, nick_name):
+        cls.WEIBO_SEARCH_URL.format(nickname=unicode(nick_name))
+
+    @classmethod
+    def get_weibo_status_url(cls, uid, page=1):
+        cls.WEIBO_LIST_PAGE_URL_PREFIX.format(uid=uid, page=page)

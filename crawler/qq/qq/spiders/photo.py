@@ -24,7 +24,7 @@ sys.setdefaultencoding('utf8')
 
 
 class QqPhotoSpider(CommonSpider):
-    name = "qq_photo"
+    name = "qq_photo_status"
     fetch_size = 200
     uid = 0
 
