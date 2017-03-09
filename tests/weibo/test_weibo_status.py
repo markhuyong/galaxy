@@ -51,3 +51,9 @@ class TestWeiboStatusOffline(TestCase):
         self.assertEqual(minus_before_parser, str(
             (datetime.now() - timedelta(minutes=27)).strftime(
                 "%Y-%m-%d %H:%M:%S")))
+
+    def test__parse_weibo_text(self):
+        response = fake_response_from_file('../weibo/yufeihong.html')
+        text_css = response.css('.c[id^=M_EyP14odBh]')
+        weibo_text = self.spider._parse_weibo_text(text_css)
+        self.assertTrue(u'各位女神节日快乐' in weibo_text, "text is not in source")

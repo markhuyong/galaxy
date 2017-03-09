@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import sys
 from scrapy import Selector
 
 from ..items import WeiboUserItem
@@ -10,6 +11,8 @@ from ..utils import BaseHelper
 
 logger = logging.getLogger(__name__)
 
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 class WeiboInfoSpider(CommonSpider):
     name = "weibo_info"
@@ -21,7 +24,7 @@ class WeiboInfoSpider(CommonSpider):
         uid = kwargs.get('uid')  # nick_name
         if uid:
             self.nick_name = uid
-            self.logger.debug("uid item = {}".format(uid))
+            # self.logger.debug("uid item = {}".format(unicode(uid)))
             self.start_urls = [BaseHelper.get_common_page_url(uid)]
 
     def parse(self, response):
