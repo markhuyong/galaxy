@@ -5,6 +5,13 @@ import sys
 import re
 from datetime import date, datetime, timedelta
 
+try:
+    from cStringIO import StringIO as BytesIO
+except ImportError:
+    from io import BytesIO
+
+from PIL import Image
+
 from scrapy import Request
 from scrapy import Selector
 
@@ -23,7 +30,7 @@ class WeiboStatusSpider(CommonSpider):
     name = "weibo_status"
     uid = 0
     total_page = 0
-    max_download_page = 1
+    max_download_page = 2
 
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)
@@ -45,21 +52,52 @@ class WeiboStatusSpider(CommonSpider):
                 'input[name=mp]::attr(value)').extract_first()
 
         next_page_flag = u"下页" in res.css('#pagelist').css(
-            'div a::text').extract_first()
+            'div a::text').extract_first() or False
         next_page_num = res.css('#pagelist').css(
-            'div a::attr(href)').re_first(u'page=(\d+)')
+            'div a::attr(href)').re_first(u'page=(\d+)') or 0
 
         for weibo in weibo_status:
             item = WeiboStatusItem()
+
+            # parse published_at
             item['published_at'] = self._parse_weibo_published_at(
                 weibo.css('.ct').extract_first())
+
+            # parse text
             item['text'] = self._parse_weibo_text(weibo)
-            item['pictures'] = []  # self._parse_weibo_images(weibo)
+            tag = weibo.css('div a[href^="/comment/"]').extract_first()
+
+            if tag:
+                request = Request("http://weibo.cn" + tag,
+                                  callback=self.parse_all_text)
+                request.meta['item'] = item
+                yield request
+
+            # self._parse_weibo_text(weibo, item)
+            pictures = []
+            item['pictures'] = []
+            view_all_pics = weibo.css(
+                'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
+                .extract_first()
+            if view_all_pics:
+                request = Request(view_all_pics,
+                                  callback=self.parse_weibo_image)
+                request.meta['item'] = item
+                yield request
+            else:
+                thumb = weibo.css('.ib a::attr(href)').extract_first()
+                if thumb:
+                    singel_url = self._translate_thumb_to_large_url(thumb)
+                    request = Request(singel_url,
+                                      callback=self.parse_weibo_image_src)
+                    request.meta['item'] = item
+                    yield request
+            # item['pictures'] = []  # self._parse_weibo_images(weibo)
             yield item
 
-        if next_page_flag and next_page_num <= self.max_download_page:
-            next_page = BaseHelper.get_weibo_status_url(self.uid, next_page_num)
-            yield Request(url=next_page)
+            if next_page_flag and next_page_num <= self.max_download_page:
+                next_page = BaseHelper.get_weibo_status_url(self.uid, next_page_num)
+                yield Request(url=next_page)
 
     def _parse_weibo_published_at(self, time_str):
         pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
@@ -86,18 +124,6 @@ class WeiboStatusSpider(CommonSpider):
                     "%Y-%m-%d %H:%M:%S"))
 
     def _parse_weibo_text(self, weibo_css):
-        text_span = weibo_css.css('.ctt')
-        tag = weibo_css.css('div a[href^="/comment/"]').extract_first()
-
-        tag_text = ""
-        tag_key = "tag_key"
-
-        if tag:
-            self._get_tag_text_request("http://weibo.cn" + tag, tag_key,
-                                       tag_text)
-        weibo_src_text = tag_text if tag \
-            else weibo_css.css('span.ctt::text').extract_first()
-
         forward_from = ""
         forward_reason = ""
         comment_list = weibo_css.css('.cmt')
@@ -107,53 +133,68 @@ class WeiboStatusSpider(CommonSpider):
                 forward_from = cm_text
             elif u"转发理由:" in cm_text:
                 forward_reason = weibo_css.css('div::text').re_first(
-                    u'转发理由:(.*) 赞[\d+]')
+                    u'转发理由:(.*) 赞[\d+]') or ""
 
-        return forward_reason + forward_from + weibo_src_text
+        return forward_reason + forward_from
 
-    def _get_tag_text_request(self, url, key, text):
-        request = Request(url, callback=self.parse_all_text)
+    def parse_all_text(self, response):
+        item = response.request.meta['item']
+        item['text'] = response.css(
+            '.c[id^=M_].ctt::text').extract_first()
+        return item
+
+    def _parse_weibo_images(self, weibo_css):
+        text_span = weibo_css.css('.ctt')
+        pictures = []
+        view_all_pics = weibo_css.css(
+            'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
+            .extract_first()
+        if view_all_pics:
+            self._get_weibo_image_request(view_all_pics)
+        else:
+            thumb = weibo_css.css('.ib a::attr(href)').extract_first()
+            if thumb:
+                singel_url = self._translate_thumb_to_large_url(thumb)
+                pictures = [
+                    self._get_weibo_single_image_request(singel_url, 'picture')]
+        return pictures
+
+    def _get_weibo_image_request(self, url, key, text):
+        request = Request(url, callback=self.parse_weibo_image)
         request.meta[key] = text
         return request
 
-    def parse_all_text(self, response, key):
-        response.request.meta[key] = response.css(
-            '.c[id^=M_].ctt::text').extract_first()
+    def parse_weibo_image(self, response):
+        item = response.request.meta['item']
+        urls = response.css(
+            '.c a img::attr(src)').extract()
+        for url in urls:
+            request = Request(self._translate_thumb_to_large_url(url),
+                              callback=self.parse_weibo_image_src)
+            request.meta['item'] = item
+            yield request
 
-        # def _parse_weibo_images(self, weibo_css):
-        #     text_span = weibo_css.css('.ctt')
-        #     pictures = []
-        #     view_all_pics = weibo_css.css(
-        #         'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)')\
-        #         .extract_first()
-        #     if view_all_pics:
-        #         self._get_weibo_image_request(view_all_pics)
-        #     else:
-        #         thumb = weibo_css.css('.ib a::attr(href)').extract_first()
-        #         if thumb:
-        #             singel_url = self._translate_thumb_to_large_url(thumb)
-        #             pictures = [self._get_weibo_single_image_request(singel_url, 'picture')]
-        #     return pictures
-        #
-        # def _get_weibo_image_request(self, url, key, text):
-        #     request = Request(url, callback=self.parse_weibo_image)
-        #     request.meta[key] = text
-        #     return request
-        #
-        # def parse_weibo_image(self, response, key):
-        #     response.request.meta[key] = response.css('.c[id^=M_].ctt::text').extract_first()
-        #
-        # def _get_weibo_single_image_request(self, url, key, text):
-        #     request = Request(url, callback=self.parse_weibo_single_image())
-        #     request.meta[key] = text
-        #     return request
-        #
-        # def parse_weibo_single_image(self, response, key):
-        #     response.request.meta[key] = response.css(
-        #         '.c[id^=M_].ctt::text').extract_first()
-        #
-        # def _translate_thumb_to_large_url(self, thumb_url):
-        #     return thumb_url.replace("^http://ss", "http://ww") \
-        #         .replace("&690$", ".jpg") \
-        #         .replace("/thumb180/", "/large/") \
-        #         .replace("/wap180/", "/large/")
+    def parse_weibo_image_src(self, response):
+        item = response.request.meta['item']
+        orig_image = Image.open(BytesIO(response.body))
+
+        width, height = orig_image.size
+        pic = {
+            "url": response.request.url,
+            "width": width,
+            "height": height
+
+        }
+        item['pictures'] += [pic]
+        return item
+
+    def _get_weibo_single_image_request(self, url, key, text):
+        request = Request(url, callback=self.parse_weibo_single_image())
+        request.meta[key] = text
+        return request
+
+    def _translate_thumb_to_large_url(self, thumb_url):
+        return thumb_url.replace("^http://ss", "http://ww") \
+            .replace("&690$", ".jpg") \
+            .replace("/thumb180/", "/large/") \
+            .replace("/wap180/", "/large/")

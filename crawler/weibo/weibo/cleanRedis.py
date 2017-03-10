@@ -21,8 +21,10 @@ if __name__ == '__main__':
             rconn_filter = None
 
     if rconn:
-        if 'weibo:requests' in rconn.keys():
-            rconn.delete('weibo:requests')
+        for key in rconn.keys():
+            if "weibo" in key:
+                print "weibo:key===={}".format(key)
+                rconn.delete(key)
 
     if rconn_filter:
         if 'weibo:dupefilter0' in rconn.keys():
