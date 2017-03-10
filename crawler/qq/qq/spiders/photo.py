@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
+
+import logging
 from scrapy.http.request import Request
 import json
 
@@ -11,6 +13,8 @@ from ..utils import BaseHelper
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+logger = logging.getLogger(__name__)
 
 
 class QqPhotoSpider(CommonSpider):
@@ -23,7 +27,7 @@ class QqPhotoSpider(CommonSpider):
 
         uid = kwargs.get('uid')
         if uid:
-            self.logger.debug("uid item = {}".format(uid))
+            logger.debug("uid item = {}".format(uid))
             self.uid = uid
             self.start_urls = [BaseHelper.get_album_url(uid)]
 

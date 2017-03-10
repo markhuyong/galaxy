@@ -86,8 +86,8 @@ class CommonSpider(CrawlSpider):
             else:
                 item[nk] = []
 
-    # 1. item是一个单独的item，所有数据都聚合到其中 *merge
-    # 2. 存在item列表，所有item归入items
+    # 1. single item will merge into items
+    # 2. if exist item list, then add item to items
     def traversal(self, sel, rules, item_class, item, items):
         # print 'traversal:', sel, rules.keys()
         if item is None:

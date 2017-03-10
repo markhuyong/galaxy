@@ -4,12 +4,16 @@ import sys
 import re
 import json
 
+import logging
+
 from ..profile_items import QQProfileItem
 from ..utils import CommonSpider
 from ..utils import BaseHelper
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+logger = logging.getLogger(__name__)
 
 
 class QqInfoSpider(CommonSpider):
@@ -23,14 +27,14 @@ class QqInfoSpider(CommonSpider):
 
         uid = kwargs.get('uid')
         if uid:
-            self.logger.debug("uid item = {}".format(uid))
+            logger.debug("uid item = {}".format(uid))
             self.start_urls = [BaseHelper.get_profile_url(uid)]
 
     def parse(self, response):
         matcher = re.findall(self.COUNT_REGEXP, str(response.body))
         if matcher:
             s = str(matcher.pop())
-            self.logger.debug("the matcher string is {}".format(s))
+            logger.debug("the matcher string is {}".format(s))
             prefix = "\"count\":"
             s = s[len(prefix):len(s)]
             json_obj = json.loads(s)
@@ -39,5 +43,5 @@ class QqInfoSpider(CommonSpider):
             item['message'] = json_obj['message']
             item['pic'] = json_obj['pic']
             item['shuoshuo'] = json_obj['shuoshuo']
-            self.logger.debug("json item = {}".format(item))
+            logger.debug("json item = {}".format(item))
             yield item

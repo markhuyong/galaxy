@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+
 class WeiboInfoSpider(CommonSpider):
     name = "weibo_info"
     nick_name = ""

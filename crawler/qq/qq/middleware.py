@@ -15,12 +15,12 @@ from scrapy.downloadermiddlewares.retry import RetryMiddleware
 # fileConfig('logging_config.ini')
 logger = logging.getLogger(__name__)
 # handler = logging.StreamHandler()
-handler = logging.FileHandler('hello.log')
-formatter = logging.Formatter(
-        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler('hello.log')
+# formatter = logging.Formatter(
+#         '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
+# logger.setLevel(logging.DEBUG)
 
 
 class CookiesMiddleware(RetryMiddleware):

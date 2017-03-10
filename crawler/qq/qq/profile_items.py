@@ -14,7 +14,7 @@ class ProfileItem(Item):
     uid = Field()
 
 
-class IQQProfileItem(ProfileItem):
+class QQProfileItem(ProfileItem):
     blog = Field()
     message = Field()
     pic = Field()

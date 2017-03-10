@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import random
 import redis
 import json
@@ -62,6 +61,5 @@ class CookiesMiddleware(RetryMiddleware):
         elif response.status in [403, 414]:
             logger.error("%s! Stopping..." % response.status)
             print("%s! Stopping..." % response.status)
-            # os.system("pause")
         else:
             return response
