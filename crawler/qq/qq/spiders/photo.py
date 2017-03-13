@@ -3,6 +3,8 @@
 import sys
 
 import logging
+
+from scrapy.exceptions import CloseSpider
 from scrapy.http.request import Request
 import json
 
@@ -38,7 +40,7 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            raise "fetch error"
+            raise ValueError("have no photos or your have no right to access.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
@@ -73,7 +75,7 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            raise "fetch error"
+            raise ValueError("have no photos or your have no right to access.")
 
         photos_dict = body['data']['photos']
         for photos_key in body['data']['photos']:

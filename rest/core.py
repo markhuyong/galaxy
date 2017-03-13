@@ -235,8 +235,11 @@ class CrawlManager(object):
             self.request_count += 1
 
     def handle_spider_error(self, failure, spider):
-        if spider is self.crawler.spider and self.debug:
-            fail_data = failure.getTraceback()
+        if spider is self.crawler.spider:
+            if failure.type is ValueError:
+                fail_data = failure.value.message
+            else:
+                fail_data = failure.getTraceback()
             self.errors.append(fail_data)
 
     def get_item(self, item, response, spider):

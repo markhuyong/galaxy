@@ -32,7 +32,7 @@ class QqStatusSpider(CommonSpider):
 
         logger.debug("body======={}".format(body))
         if body['code'] != 0:
-            raise "fetch error"
+            raise ValueError("have no photos or your have no right to access.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
