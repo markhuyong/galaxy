@@ -6,17 +6,17 @@ from scrapy import Item, Field
 
 
 class CollectionItem(Item):
-    read = Field()          # 阅读数量
-    comment = Field()       # 评论数量
-    like = Field()          # 喜欢数量
+    articleRead = Field()          # 阅读数量
+    articleComment = Field()       # 评论数量
+    articleLike = Field()          # 喜欢数量
     title = Field()         # 文章标题
     url = Field()           # 文章链接
     reward = Field()        # 打赏数量
-    created_at = Field()    # 创建时间
-    published_at = Field()  # 文章发布时间
+    createTime = Field()    # 创建时间
+    publishTime = Field()  # 文章发布时间
     content = Field()       # 内容
-    modified_at = Field()   # 最后编辑时间
-    word_count = Field()    # 文字个数
+    lastPublishTime = Field()   # 最后编辑时间
+    wordCount = Field()    # 文字个数
 
 
 class LecturesItem(Item):
