@@ -21,6 +21,6 @@ class CollectionItem(Item):
 
 class LecturesItem(Item):
     url = Field()
-    author_name = Field()
+    authorName = Field()
     lectures = Field()
     specials = Field()

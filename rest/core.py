@@ -259,12 +259,12 @@ class CrawlManager(object):
         stats = OrderedDict((k, v) for k, v in sorted(stats.items()))
         results = {
             "items": self.items,
+            "spider_name": self.spider_name,
+            "items_dropped": self.items_dropped,
+            "errors": self.errors,
         }
         if self.debug:
-            results["items_dropped"] = self.items_dropped
             results["stats"] = stats
-            results["spider_name"] = self.spider_name
-            results["errors"] = self.errors
         return results
 
     def create_spider_request(self, kwargs):

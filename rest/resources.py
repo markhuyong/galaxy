@@ -92,7 +92,6 @@ class ServiceResource(resource.Resource, object):
 
 
 class RealtimeApi(ServiceResource):
-
     def __init__(self, **kwargs):
         super(RealtimeApi, self).__init__(self)
         for route, resource_path in settings.RESOURCES.iteritems():
@@ -101,7 +100,6 @@ class RealtimeApi(ServiceResource):
 
 
 class CrawlResource(ServiceResource):
-
     isLeaf = True
     allowedMethods = ['GET', 'POST']
 
@@ -228,31 +226,76 @@ class CrawlResource(ServiceResource):
     def run_crawl(self, spider_name, scrapy_request_args,
                   max_requests=None, start_requests=False, *args, **kwargs):
         crawl_manager_cls = load_object(settings.CRAWL_MANAGER)
-        manager = crawl_manager_cls(spider_name, scrapy_request_args, max_requests, start_requests=start_requests)
+        manager = crawl_manager_cls(spider_name, scrapy_request_args,
+                                    max_requests, start_requests=start_requests)
         dfd = manager.crawl(*args, **kwargs)
         return dfd
 
+    # def prepare_response(self, result, *args, **kwargs):
+    #     items = result.get("items")
+    #     response = {
+    #         "success": "true",
+    #         "items": items,
+    #     }
+    #
+    #     items_dropped = result.get("items_dropped")
+    #     if items_dropped:
+    #         response['items_dropped'] = items_dropped
+    #
+    #     stats = result.get("stats")
+    #     if items_dropped:
+    #         response['stats'] = stats
+    #
+    #     spider_name = result.get("spider_name")
+    #     if spider_name:
+    #         response['spider_name'] = spider_name
+    #
+    #     errors = result.get("errors")
+    #     if errors:
+    #         response["success"] = "false"
+    #         response["errors"] = errors
+    #     return response
+
     def prepare_response(self, result, *args, **kwargs):
-        items = result.get("items")
-        response = {
-            "success": "true",
-            "items": items,
-        }
-
-        items_dropped = result.get("items_dropped")
-        if items_dropped:
-            response['items_dropped'] = items_dropped
-
-        stats = result.get("stats")
-        if items_dropped:
-            response['stats'] = stats
-
+        response = {}
         spider_name = result.get("spider_name")
-        if spider_name:
-            response['spider_name'] = spider_name
+        if not spider_name:
+            response["success"] = "false"
+            response["message"] = "spider_name is missing!"
+            return response
 
         errors = result.get("errors")
         if errors:
             response["success"] = "false"
-            response["errors"] = errors
-        return response
+            response["message"] = str(errors)
+            return response
+
+        items_dropped = result.get("items_dropped")
+        if items_dropped:
+            response["success"] = "false"
+            response["message"] = str(items_dropped)
+            return response
+
+        info_spiders = ["jianshu_lectures", "qq_info", "weibo_info"]
+
+        if spider_name in info_spiders:
+            items = result.get("items")
+            if not items:
+                response = {
+                    "success": "false",
+                    "message": "the result is empty.",
+                }
+
+            response = {
+                "success": "true",
+
+            }
+            response.update(items[0])
+            return response
+        else:
+            items = result.get("items")
+            response = {
+                "success": "true",
+                "items": items,
+            }
+            return response
