@@ -43,7 +43,7 @@ class QqStatusSpider(CommonSpider):
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['published_at'] = feed['comm']['time']
+            item['publishTime'] = feed['comm']['time']
             item['text'] = feed['operation']['share_info']['summary']
 
             # get photo urls

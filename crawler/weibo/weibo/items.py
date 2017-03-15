@@ -12,6 +12,6 @@ class WeiboUserItem(Item):
 
 
 class WeiboStatusItem(Item):
-    published_at = Field()
+    publishTime = Field()
     text = Field()
     pictures = Field()

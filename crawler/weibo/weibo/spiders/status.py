@@ -60,7 +60,7 @@ class WeiboStatusSpider(CommonSpider):
             item = WeiboStatusItem()
 
             # parse published_at
-            item['published_at'] = self._parse_weibo_published_at(
+            item['publishTime'] = self._parse_weibo_published_at(
                 weibo.css('.ct').extract_first())
 
             # parse text
@@ -109,12 +109,12 @@ class WeiboStatusSpider(CommonSpider):
         matches_list = pattern.findall(time_str)
         for match in matches_list:
             return str(date.today().year) + '-' + match.replace(u'月', '-') \
-                .replace(u'日', '')
+                .replace(u'日', '') + ":00"
 
         pattern = re.compile(u'今天 (\d{2}:\d{2})')
         matches_list = pattern.findall(time_str)
         for match in matches_list:
-            return str(date.today()) + ' ' + match
+            return str(date.today()) + ' ' + match + ":00"
 
         pattern = re.compile(u'(\d{2})分钟前')
         matches_list = pattern.findall(time_str)

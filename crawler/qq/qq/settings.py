@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = 'qq.spiders'
 
 DOWNLOADER_MIDDLEWARES = {
     # Engine side
-    'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
+    # 'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
     'qq.middleware.CookiesMiddleware': 402,
 }
 
@@ -37,4 +37,4 @@ LOG_FILE = 'tttt.log'
 
 ROBOTSTXT_OBEY = False
 
-DOWNLOAD_DELAY = 0.25
+DOWNLOAD_DELAY = 1

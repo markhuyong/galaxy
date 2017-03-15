@@ -115,7 +115,7 @@ class QqPhotoSpider(CommonSpider):
 
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
-                status['published_at'] = time_dict.get(key, 0) * 1000
+                status['publishTime'] = time_dict.get(key, 0) * 1000
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 yield status
