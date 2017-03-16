@@ -26,9 +26,15 @@ my_qq = [
 def getCookie(account, password):
     """ 获取一个账号的Cookie """
 
+    USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
     login_page = "http://ui.ptlogin2.qq.com/cgi-bin/login?style=9&pt_ttype=1&appid=549000929&pt_no_auth=1&pt_wxtest=1&daid=5&s_url=https%3A%2F%2Fh5.qzone.qq.com%2Fmqzone%2Findex"
 
-    driver = webdriver.PhantomJS()
+    cap = webdriver.DesiredCapabilities.PHANTOMJS
+    cap["phantomjs.page.settings.resourceTimeout"] = 5000
+    cap["phantomjs.page.settings.loadImages"] = False
+    cap["phantomjs.page.settings.userAgent"] = USER_AGENT
+
+    driver = webdriver.PhantomJS(desired_capabilities=cap)
     # driver.delete_all_cookies()
     driver.get(login_page)
 
