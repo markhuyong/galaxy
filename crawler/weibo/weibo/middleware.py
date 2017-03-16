@@ -19,7 +19,9 @@ class CookiesMiddleware(RetryMiddleware):
         RetryMiddleware.__init__(self, settings)
         self.rconn = settings.get("RCONN", redis.Redis(
             crawler.settings.get('REDIS_HOST', 'localhsot'),
-            crawler.settings.get('REDIS_PORT', 6379)))
+            crawler.settings.get('REDIS_PORT', 6379),
+            crawler.settings.get('REDIS_DB', 0),
+            crawler.settings.get('REDIS_PASS', None)))
         initCookie(self.rconn, crawler.spider.name)
 
     @classmethod

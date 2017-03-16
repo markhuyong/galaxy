@@ -20,6 +20,8 @@ SPIDER_MIDDLEWARES = {
 REDIE_URL = None
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_PASS = 'AW6exN@pVw0mxcB4'
 
 # 去重队列的信息
 FILTER_URL = None

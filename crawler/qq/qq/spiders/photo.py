@@ -52,7 +52,7 @@ class QqPhotoSpider(CommonSpider):
 
                 fetch_len = photo_num // self.fetch_size
                 last_fetch_size = photo_num % self.fetch_size
-                for n in xrange(0, photo_num // self.fetch_size):
+                for n in xrange(0, fetch_len):
                     already_fetch_num = n * self.fetch_size
                     fetch_batch_size = self.fetch_size if fetch_len - n > 0 \
                         else last_fetch_size
@@ -118,4 +118,5 @@ class QqPhotoSpider(CommonSpider):
                 status['publishTime'] = time_dict.get(key, 0) * 1000
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
+                logger.debug("status*======={}", status)
                 yield status
