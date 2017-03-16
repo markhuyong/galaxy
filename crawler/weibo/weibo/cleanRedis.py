@@ -8,7 +8,7 @@ import redis
 
 if __name__ == '__main__':
     try:
-        rconn = redis.Redis(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB)
+        rconn = redis.Redis(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB, settings.REDIS_PASS)
     except Exception:
         rconn = redis.Redis(settings.REDIS_HOST, settings.REDIS_PORT)
 
