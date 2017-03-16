@@ -7,12 +7,12 @@ from scrapy import Item, Field
 
 class QqStatusItem(Item):
     text = Field()
-    published_at = Field()
+    publishTime = Field()
     pictures = Field()
 
 
 class QqPhotoItem(Item):
-    published_at = Field()
+    publishTime = Field()
     images = Field()
 
 

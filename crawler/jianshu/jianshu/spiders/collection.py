@@ -16,10 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class CollectionSpider(CommonSpider):
-    name = "collection"
+    name = "jianshu_collection"
 
     page = 1
     max_page = 3
+
+    def __init__(self, *args, **kwargs):
+        super(CommonSpider, self).__init__(*args, **kwargs)
+
+        uid = kwargs.get('uid')
+        if uid:
+            self.logger.debug("uid item = {}".format(uid))
+            self.start_urls = [BaseHelper.get_collection_url(uid)]
 
     def parse(self, response):
         res = Selector(response)
@@ -41,14 +49,14 @@ class CollectionSpider(CommonSpider):
             t = row.css('a.title')
             item['title'] = t.css('::text').extract_first()
             item['url'] = t.css('::attr(href)').extract_first()
-            item['published_at'] = row.css(
+            item['publishTime'] = row.css(
                 '.name .time::attr(data-shared-at)').extract_first()
             meta = row.css('.content .meta')
-            item['read'] = meta.css(
+            item['articleRead'] = meta.css(
                 ':nth-child(1)::text').re_first(ur'(\d+)') or 0
-            item['comment'] = meta.css(
+            item['articleComment'] = meta.css(
                 ':nth-child(2)::text').re_first(ur'(\d+)') or 0
-            item['like'] = meta.css(
+            item['articleLike'] = meta.css(
                 ':nth-child(3)::text').re_first(ur'(\d+)') or 0
             item['reward'] = meta.css(
                 ':nth-child(4)::text').re_first(ur'(\d+)') or 0
@@ -81,4 +89,4 @@ class CollectionSpider(CommonSpider):
         logger.debug("res.css('.show-content')=========={}".format(
             res.css('.show-content')))
         item['content'] = res.css('.show-content').extract_first()
-        item['word_count'] = res.css('.wordage').re_first(ur'(\d+)') or 0
+        item['wordCount'] = res.css('.wordage').re_first(ur'(\d+)') or 0

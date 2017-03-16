@@ -16,7 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class LectureSpider(CommonSpider):
-    name = "lectures"
+    name = "jianshu_lectures"
+
+    def __init__(self, *args, **kwargs):
+        super(CommonSpider, self).__init__(*args, **kwargs)
+
+        uid = kwargs.get('uid')
+        if uid:
+            self.logger.debug("uid item = {}".format(uid))
+            self.start_urls = [BaseHelper.get_user_url(uid)]
 
     def parse(self, response):
         uid = response.request.url.split('/')[-1]
@@ -29,7 +37,7 @@ class LectureSpider(CommonSpider):
         item = LecturesItem()
         res = Selector(response)
         titles = res.css('title::text').re(ur'(\w+)') or ['']
-        item['author_name'] = titles[0]
+        item['authorName'] = titles[0]
         item['url'] = response.request.url
 
         next_link = BaseHelper.LECTURES_URL.format(uid=uid)
@@ -48,7 +56,7 @@ class LectureSpider(CommonSpider):
         collection = []
 
         for record in body['notebooks']:
-            lecture = self._get_partial_lecture(record, item['author_name'])
+            lecture = self._get_partial_lecture(record, item['authorName'])
             yield self._get_parse_article_number_request(lecture, 'lecture')
             collection += [lecture]
 
@@ -56,7 +64,7 @@ class LectureSpider(CommonSpider):
 
         collection = []
         for record in body['own_collections']:
-            lecture = self._get_partial_lecture(record, item['author_name'],
+            lecture = self._get_partial_lecture(record, item['authorName'],
                                                 isSpecial=True)
             yield self._get_parse_article_number_request(lecture, 'lecture')
             collection += [lecture]
@@ -67,7 +75,7 @@ class LectureSpider(CommonSpider):
         lecture = response.request.meta['lecture']
         res = Selector(response)
         numbers = res.css('div.info::text').re(ur'([0-9]+)') or [0]
-        lecture['article_number'] = numbers[0]
+        lecture['articleNumber'] = numbers[0]
 
     def _get_partial_lecture(self, record, author_name, isSpecial=False):
         if isSpecial:
@@ -80,7 +88,7 @@ class LectureSpider(CommonSpider):
     def _init_partial_lecture(self, record, author_name, title_key, link_infix,
                               link_suffix):
         lecture = dict()
-        lecture['author_name'] = author_name
+        lecture['authorName'] = author_name
         lecture['name'] = record[title_key]
         lecture['url'] = "{base}/{infix}/{id}".format(base=BaseHelper.BASE_URL,
                                                       infix=link_infix,

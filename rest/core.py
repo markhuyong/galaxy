@@ -26,6 +26,7 @@ class GalaxyCrawler(Crawler):
     start_requests.
 
     """
+
     def __init__(self, spidercls, crawler_settings, start_requests=False):
         super(GalaxyCrawler, self).__init__(spidercls, crawler_settings)
         self.start_requests = start_requests
@@ -49,7 +50,6 @@ class GalaxyCrawler(Crawler):
 
 
 class GalaxyCrawlerProcess(CrawlerRunner):
-
     def __init__(self, settings, galaxy_manager):
         super(GalaxyCrawlerProcess, self).__init__(settings)
         self.galaxy_manager = galaxy_manager
@@ -75,6 +75,7 @@ class GalaxyCrawlerProcess(CrawlerRunner):
         dfd = super(GalaxyCrawlerProcess, self).crawl(crawler, *args, **kwargs)
         _cleanup_handler = setup_spider_logging(crawler.spider, self.settings)
         log.msg("========crawl GalaxyCrawlerProcess")
+
         def cleanup_logging(result):
             _cleanup_handler()
             return result
@@ -111,6 +112,7 @@ def monkey_patch_and_connect_log_observer(crawler, log_observer):
     new logging sooner.
 
     """
+
     def stop_and_close_log_file(self):
         self.__stop()
         self.write.__self__.close()
@@ -126,7 +128,8 @@ class CrawlManager(object):
     Runs crawls
     """
 
-    def __init__(self, spider_name, request_kwargs, max_requests=None, start_requests=False):
+    def __init__(self, spider_name, request_kwargs, max_requests=None,
+                 start_requests=False):
         self.spider_name = spider_name
         self.log_dir = settings.LOG_DIR
         self.items = []
@@ -140,7 +143,7 @@ class CrawlManager(object):
         self.crawler = None
         # callback will be added after instantiation of crawler object
         # because we need to know if spider has method available
-        #self.callback_name = request_kwargs.pop('callback', None) or 'parse_entry'
+        # self.callback_name = request_kwargs.pop('callback', None) or 'parse_entry'
         self.callback_name = request_kwargs.pop('callback', None) or 'parse'
         if request_kwargs.get("url"):
             self.request = self.create_spider_request(deepcopy(request_kwargs))
@@ -232,8 +235,11 @@ class CrawlManager(object):
             self.request_count += 1
 
     def handle_spider_error(self, failure, spider):
-        if spider is self.crawler.spider and self.debug:
-            fail_data = failure.getTraceback()
+        if spider is self.crawler.spider:
+            if failure.type is ValueError:
+                fail_data = failure.value.message
+            else:
+                fail_data = failure.getTraceback()
             self.errors.append(fail_data)
 
     def get_item(self, item, response, spider):
@@ -253,12 +259,12 @@ class CrawlManager(object):
         stats = OrderedDict((k, v) for k, v in sorted(stats.items()))
         results = {
             "items": self.items,
-            "items_dropped": self.items_dropped,
-            "stats": stats,
             "spider_name": self.spider_name,
+            "items_dropped": self.items_dropped,
+            "errors": self.errors,
         }
         if self.debug:
-            results["errors"] = self.errors
+            results["stats"] = stats
         return results
 
     def create_spider_request(self, kwargs):
@@ -266,7 +272,8 @@ class CrawlManager(object):
         try:
             req = Request(url, **kwargs)
         except (TypeError, ValueError) as e:
-            message = "Error while creating Scrapy Request, {}".format(e.message)
+            message = "Error while creating Scrapy Request, {}".format(
+                e.message)
             raise Error('400', message=message)
 
         req.dont_filter = True

@@ -12,7 +12,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 logger = logging.getLogger(__name__)
-# logging.LoggerAdapter(logger, {'middleware': 'cookies'})
 
 """
     输入你的微博账号和密码，可去淘宝买，一元5个。
@@ -45,13 +44,13 @@ def getCookie(account, password):
     driver.find_element_by_id("p").send_keys(password)
     # driver.find_element_by_id("p").send_keys("hongle79")
     # driver.find_element_by_id("go").click()
-    driver.save_screenshot("logs/test1.png")
+    # driver.save_screenshot("logs/test1.png")
     go.click()
     WebDriverWait(driver, 50).until(
         EC.presence_of_element_located((By.ID, "nav_bar_me"))
     )
 
-    driver.save_screenshot("logs/test.png")
+    # driver.save_screenshot("logs/test.png")
     # WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "Click here for results of recent tournaments")))
     #  print driver.page_source
 

@@ -13,8 +13,10 @@ logger = logging.getLogger(__name__)
     建议买几十个，实际生产建议100+，微博反爬得厉害，太频繁了会出现302转移。
 """
 myWeiBo = [
-    ('14523526312', '6xso0iu'),
+    #('14523526312', '6xso0iu'),
     # ('14523520983', '8ptsdvi'),
+    ('14523526653', '2jk8swi'),
+    ('14523526103', '1l9dgqf'),
 ]
 
 
@@ -56,12 +58,12 @@ def getCookie(account, password):
 def initCookie(rconn, spiderName):
     """ 获取所有账号的Cookies，存入Redis。如果Redis已有该账号的Cookie，则不再获取。 """
     for weibo in myWeiBo:
-        if rconn.get("%s:Cookies:%s--%s" % (spiderName, weibo[0], weibo[1])) \
+        if rconn.get("%s:Cookies:%s--%s" % ("weibo", weibo[0], weibo[1])) \
                 is None:  # 'weibo:Cookies:账号--密码'，为None即不存在。
             cookie = getCookie(weibo[0], weibo[1])
             if len(cookie) > 0:
                 rconn.set(
-                    "%s:Cookies:%s--%s" % (spiderName, weibo[0], weibo[1]),
+                    "%s:Cookies:%s--%s" % ("weibo", weibo[0], weibo[1]),
                     cookie)
     cookieNum = "".join(rconn.keys()).count("weibo:Cookies")
     logger.warning("The num of the cookies is %s" % cookieNum)
@@ -78,7 +80,7 @@ def updateCookie(accountText, rconn, spiderName):
     if len(cookie) > 0:
         logger.warning(
             "The cookie of %s has been updated successfully!" % account)
-        rconn.set("%s:Cookies:%s" % (spiderName, accountText), cookie)
+        rconn.set("%s:Cookies:%s" % ("weibo", accountText), cookie)
     else:
         logger.warning(
             "The cookie of %s updated failed! Remove it!" % accountText)
@@ -87,7 +89,7 @@ def updateCookie(accountText, rconn, spiderName):
 
 def removeCookie(accountText, rconn, spiderName):
     """ 删除某个账号的Cookie """
-    rconn.delete("%s:Cookies:%s" % (spiderName, accountText))
+    rconn.delete("%s:Cookies:%s" % ("weibo", accountText))
     cookieNum = "".join(rconn.keys()).count("weibo:Cookies")
     logger.warning("The num of the cookies left is %s" % cookieNum)
     if cookieNum == 0:
