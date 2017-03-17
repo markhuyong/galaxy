@@ -35,7 +35,7 @@ class CookiesMiddleware(RetryMiddleware):
             crawler.settings.get('REDIS_PORT', 6379),
             crawler.settings.get('REDIS_DB', 0),
             crawler.settings.get('REDIS_PASS', None)))
-        initCookie(self.rconn, "qq")
+        initCookie(self.rconn, crawler)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -43,7 +43,7 @@ class CookiesMiddleware(RetryMiddleware):
 
     def process_request(self, request, spider):
         logger.debug("cookies request.url ======{}".format(request.url))
-        redisKeys = self.rconn.keys()
+        redisKeys = self.rconn.keys("qq:Cookies:*")
         while len(redisKeys) > 0:
             elem = random.choice(redisKeys)
             if "{}:Cookies".format("qq") in elem:

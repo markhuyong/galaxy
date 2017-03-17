@@ -24,7 +24,7 @@ if __name__ == '__main__':
             rconn_filter = None
 
     if rconn:
-        for key in rconn.keys():
+        for key in rconn.keys("qq:Cookies:*"):
             print "qq:key===={}".format(key)
             rconn.delete(key)
 

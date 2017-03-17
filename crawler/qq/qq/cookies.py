@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import base64
-import os
-import requests
 import json
 import logging
 
@@ -10,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+import qqlib
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +18,11 @@ logger = logging.getLogger(__name__)
 """
 my_qq = [
     # ('1544269229', '1rwi4o8d'),
-    ('914095005', 'mike110_110'),
+    ('3246800755', 'huhongle79'),
 ]
 
 
-def getCookie(account, password):
+def getCookie_driver(account, password):
     """ 获取一个账号的Cookie """
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
@@ -67,24 +66,29 @@ def getCookie(account, password):
     logger.warning("Get Cookie Success!( Account:%s )" % account)
     return json.dumps(cookies)
 
-    # if info["retcode"] == "0":
-    #     logger.warning("Get Cookie Success!( Account:%s )" % account)
-    #     cookie = session.cookies.get_dict()
-    #     return json.dumps(cookie)
-    # else:
-    #     logger.warning("Failed!( Reason:%s )" % info["reason"])
-    #     return ""
+def getCookie(account, password):
+    """ 获取一个账号的Cookie """
+    qq = qqlib.QQ(account, password)
+    qq.login()
+    cookies = qq.session.cookies
+    if "pt4_token" in cookies:
+        logger.warning("Get Cookie Success!( Account:%s )" % account)
+        cookie = cookies.get_dict()
+        return json.dumps(cookie)
+    else:
+        logger.warning("Failed!( Reason:%s )" % "pt4_token does not exist.")
+        return ""
 
-
-def initCookie(rconn, spiderName):
+def initCookie(rconn, crawler):
     """ 获取所有账号的Cookies，存入Redis。如果Redis已有该账号的Cookie，则不再获取。 """
     for qq in my_qq:
-        if rconn.get("%s:Cookies:%s--%s" % (spiderName, qq[0], qq[1])) \
+        if rconn.get("%s:Cookies:%s--%s" % ("qq", qq[0], qq[1])) \
                 is None:  # 'qq:Cookies:账号--密码'，为None即不存在。
             cookie = getCookie(qq[0], qq[1])
+            crawler.spider.log("qq cookies" + "=" * 10 + cookie)
             if len(cookie) > 0:
                 rconn.set(
-                    "%s:Cookies:%s--%s" % (spiderName, qq[0], qq[1]),
+                    "%s:Cookies:%s--%s" % ("qq", qq[0], qq[1]),
                     cookie)
     cookieNum = "".join(rconn.keys()).count("qq:Cookies")
     logger.warning("The num of the cookies is %s" % cookieNum)
@@ -101,16 +105,16 @@ def updateCookie(accountText, rconn, spiderName):
     if len(cookie) > 0:
         logger.warning(
             "The cookie of %s has been updated successfully!" % account)
-        rconn.set("%s:Cookies:%s" % (spiderName, accountText), cookie)
+        rconn.set("%s:Cookies:%s" % ("qq", accountText), cookie)
     else:
         logger.warning(
             "The cookie of %s updated failed! Remove it!" % accountText)
-        removeCookie(accountText, rconn, spiderName)
+        removeCookie(accountText, rconn, "qq")
 
 
 def removeCookie(accountText, rconn, spiderName):
     """ 删除某个账号的Cookie """
-    rconn.delete("%s:Cookies:%s" % (spiderName, accountText))
+    rconn.delete("%s:Cookies:%s" % ("qq", accountText))
     cookieNum = "".join(rconn.keys()).count("qq:Cookies")
     logger.warning("The num of the cookies left is %s" % cookieNum)
     if cookieNum == 0:

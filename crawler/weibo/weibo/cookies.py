@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 """
 myWeiBo = [
     #('14523526312', '6xso0iu'),
-    # ('14523520983', '8ptsdvi'),
+    ('13764512048', 'lebooks2016'),
     ('14523526653', '2jk8swi'),
     ('14523526103', '1l9dgqf'),
 ]

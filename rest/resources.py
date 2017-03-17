@@ -285,6 +285,7 @@ class CrawlResource(ServiceResource):
                     "success": "false",
                     "message": "the result is empty.",
                 }
+                return response
 
             response = {
                 "success": "true",
