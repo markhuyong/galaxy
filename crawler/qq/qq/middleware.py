@@ -13,6 +13,8 @@ from scrapy.downloadermiddlewares.retry import RetryMiddleware
 # from logging.config import fileConfig
 
 # fileConfig('logging_config.ini')
+from crawler.qq.qq.utils import BaseHelper
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +37,7 @@ class CookiesMiddleware(RetryMiddleware):
             crawler.settings.get('REDIS_PORT', 6379),
             crawler.settings.get('REDIS_DB', 0),
             crawler.settings.get('REDIS_PASS', None)))
-        initCookie(self.rconn, crawler)
+        initCookie(self.rconn, crawler.spider)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -43,10 +45,11 @@ class CookiesMiddleware(RetryMiddleware):
 
     def process_request(self, request, spider):
         logger.debug("cookies request.url ======{}".format(request.url))
-        redisKeys = self.rconn.keys("qq:Cookies:*")
+        prefix = BaseHelper.get_cookie_key_prefix(spider)
+        redisKeys = self.rconn.keys("{}:*".format(prefix))
         while len(redisKeys) > 0:
             elem = random.choice(redisKeys)
-            if "{}:Cookies".format("qq") in elem:
+            if prefix in elem:
                 cookie = json.loads(self.rconn.get(elem))
                 logger.info("cookies request.url ======{}".format(request.url))
 
@@ -65,17 +68,18 @@ class CookiesMiddleware(RetryMiddleware):
                 redisKeys.remove(elem)
 
     def process_response(self, request, response, spider):
+        prefix = BaseHelper.get_cookie_key_prefix(spider)
         if response.status in [300, 301, 302, 303]:
             try:
                 redirect_url = response.headers["location"]
                 if "login.weibo" in redirect_url or "login.sina" in redirect_url:  # Cookie失效
                     logger.warning("One Cookie need to be updating...")
                     updateCookie(request.meta['accountText'], self.rconn,
-                                 "qq")
+                                 spider)
                 elif "weibo.cn/security" in redirect_url:  # 账号被限
                     logger.warning("One Account is locked! Remove it!")
                     removeCookie(request.meta["accountText"], self.rconn,
-                                 "qq")
+                                 spider)
                 elif "weibo.cn/pub" in redirect_url:
                     logger.warning(
                         "Redirect to 'http://weibo.cn/pub'!( Account:%s )" %
@@ -92,7 +96,7 @@ class CookiesMiddleware(RetryMiddleware):
         elif u'登录态失效，请重新登录' in response.body:
             logger.warning("One Cookie need to be updating...")
             updateCookie(request.meta['accountText'], self.rconn,
-                         "qq")
+                         spider)
             reason = response_status_message(response.status)
             return self._retry(request, reason, spider) or response
         else:

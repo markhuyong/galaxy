@@ -41,3 +41,9 @@ class BaseHelper(object):
     @classmethod
     def get_weibo_status_url(cls, uid, page=1):
         return cls.WEIBO_LIST_PAGE_URL_PREFIX.format(uid=uid, page=page)
+
+    @staticmethod
+    def get_cookie_key_prefix(spider):
+        sep = "_"
+        assert spider.name.index(sep) > 0
+        return "{}:Cookies".format(spider.name.split(sep)[0])

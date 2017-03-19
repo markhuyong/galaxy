@@ -2,6 +2,7 @@
 # ------------------------------------------
 #   clean Redis cookies
 # ------------------------------------------
+import sys
 
 import settings
 import redis
@@ -21,10 +22,15 @@ if __name__ == '__main__':
             rconn_filter = None
 
     if rconn:
-        for key in rconn.keys():
+        prefix = "weibo:Cookies"
+        search_key = "{}:*".format(prefix)
+        keys = rconn.keys(search_key)
+        print "numbers of {} is {}".format(prefix, len(keys))
+        for key in keys:
             if "weibo" in key:
-                print "weibo:key===={}".format(key)
-                rconn.delete(key)
+                print "{}===={}".format(prefix, key)
+                if len(sys.argv) > 1 and sys.argv[1] == "yes":
+                    rconn.delete(key)
 
     if rconn_filter:
         if 'weibo:dupefilter0' in rconn.keys():

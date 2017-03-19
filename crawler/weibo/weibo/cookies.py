@@ -6,6 +6,8 @@ import requests
 import json
 import logging
 
+from crawler.weibo.weibo.utils import BaseHelper
+
 logger = logging.getLogger(__name__)
 
 """
@@ -55,42 +57,45 @@ def getCookie(account, password):
         return ""
 
 
-def initCookie(rconn, spiderName):
+def initCookie(rconn, spider):
     """ 获取所有账号的Cookies，存入Redis。如果Redis已有该账号的Cookie，则不再获取。 """
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
     for weibo in myWeiBo:
-        if rconn.get("%s:Cookies:%s--%s" % ("weibo", weibo[0], weibo[1])) \
+        if rconn.get("%s:%s--%s" % (prefix, weibo[0], weibo[1])) \
                 is None:  # 'weibo:Cookies:账号--密码'，为None即不存在。
             cookie = getCookie(weibo[0], weibo[1])
             if len(cookie) > 0:
                 rconn.set(
-                    "%s:Cookies:%s--%s" % ("weibo", weibo[0], weibo[1]),
+                    "%s:%s--%s" % (prefix, weibo[0], weibo[1]),
                     cookie)
-    cookieNum = "".join(rconn.keys()).count("weibo:Cookies")
+    cookieNum = len(rconn.keys("{}:*".format(prefix)))
     logger.warning("The num of the cookies is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')
         os.system("pause")
 
 
-def updateCookie(accountText, rconn, spiderName):
+def updateCookie(accountText, rconn, spider):
     """ 更新一个账号的Cookie """
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
     account = accountText.split("--")[0]
     password = accountText.split("--")[1]
     cookie = getCookie(account, password)
     if len(cookie) > 0:
         logger.warning(
             "The cookie of %s has been updated successfully!" % account)
-        rconn.set("%s:Cookies:%s" % ("weibo", accountText), cookie)
+        rconn.set("%s:%s" % (prefix, accountText), cookie)
     else:
         logger.warning(
             "The cookie of %s updated failed! Remove it!" % accountText)
-        removeCookie(accountText, rconn, spiderName)
+        removeCookie(accountText, rconn, spider)
 
 
-def removeCookie(accountText, rconn, spiderName):
+def removeCookie(accountText, rconn, spider):
     """ 删除某个账号的Cookie """
-    rconn.delete("%s:Cookies:%s" % ("weibo", accountText))
-    cookieNum = "".join(rconn.keys()).count("weibo:Cookies")
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
+    rconn.delete("%s:%s" % (prefix, accountText))
+    cookieNum = len(rconn.keys("{}:*".format(prefix)))
     logger.warning("The num of the cookies left is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')

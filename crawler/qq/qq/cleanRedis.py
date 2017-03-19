@@ -3,6 +3,7 @@
 #   作用：清空Redis数据，重新跑数据时用。
 # ------------------------------------------
 import logging
+import sys
 
 import settings
 import redis
@@ -24,9 +25,14 @@ if __name__ == '__main__':
             rconn_filter = None
 
     if rconn:
-        for key in rconn.keys("qq:Cookies:*"):
-            print "qq:key===={}".format(key)
-            rconn.delete(key)
+        prefix = "qq:Cookies"
+        search_key = "{}:*".format(prefix)
+        keys = rconn.keys(search_key)
+        print "numbers of {} is {}".format(prefix, len(keys))
+        for key in keys:
+            print "{}===={}".format(prefix,key)
+            if len(sys.argv) > 1 and sys.argv[1] == "yes":
+                rconn.delete(key)
 
             if 'qq' in key:
                 logger.info("qq:key===={}".format(key))

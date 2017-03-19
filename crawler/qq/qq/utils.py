@@ -70,3 +70,9 @@ class BaseHelper(object):
             .replace("PN", pn)
         return url if last_attach is None \
             else url + "&res_attach=" + unicode(str(last_attach), "UTF-8")
+
+    @staticmethod
+    def get_cookie_key_prefix(spider):
+        sep = "_"
+        assert spider.name.index(sep) > 0
+        return "{}:Cookies".format(spider.name.split(sep)[0])
