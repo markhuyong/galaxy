@@ -39,4 +39,4 @@ LOG_FILE = 'tttt.log'
 
 ROBOTSTXT_OBEY = False
 
-DOWNLOAD_DELAY = 1
+# DOWNLOAD_DELAY = 1

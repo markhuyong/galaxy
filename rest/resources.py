@@ -75,7 +75,7 @@ class ServiceResource(resource.Resource, object):
 
     def format_error_response(self, exception, request):
         return {
-            "success": "false",
+            "success": False,
             "message": str(exception),
             "code": request.code
         }

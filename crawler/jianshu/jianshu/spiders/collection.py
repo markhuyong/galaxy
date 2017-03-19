@@ -19,7 +19,7 @@ class CollectionSpider(CommonSpider):
     name = "jianshu_collection"
 
     page = 1
-    max_page = 3
+    max_page = 3000
 
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)

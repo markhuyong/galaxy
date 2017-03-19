@@ -30,7 +30,7 @@ class WeiboStatusSpider(CommonSpider):
     name = "weibo_status"
     uid = 0
     total_page = 0
-    max_download_page = 2
+    max_download_page = 3000
 
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)
