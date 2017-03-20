@@ -74,7 +74,6 @@ class WeiboStatusSpider(CommonSpider):
                 yield request
 
             # self._parse_weibo_text(weibo, item)
-            pictures = []
             item['pictures'] = []
             view_all_pics = weibo.css(
                 'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
