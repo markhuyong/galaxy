@@ -37,7 +37,11 @@ class WeiboInfoSpider(CommonSpider):
             user_info = WeiboUserItem()
             user_info['uid'] = user_info_table.css(
                 'td:first-of-type a::attr(href)').re_first('(\d+)')
-            user_info['nick_name'] = find_nick_name
-            user_info['profile_image'] = user_info_table.css(
-                'td:nth-of-type(2) img::attr(src)').extract_first()
-            yield user_info
+            if len(user_info['uid']) == 1:
+                user_info['uid'] = user_info_table.xpath(
+                    '//td/a[contains(@href, "attention")]/@href').re_first(
+                    'uid=(\d+)')
+        user_info['nick_name'] = find_nick_name
+        user_info['profile_image'] = user_info_table.css(
+            'td:nth-of-type(2) img::attr(src)').extract_first()
+        yield user_info
