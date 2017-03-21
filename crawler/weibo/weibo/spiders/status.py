@@ -74,12 +74,8 @@ class WeiboStatusSpider(CommonSpider):
             forward_reason = weibo \
                 .xpath('//div/span[@class="ct"]/../text()') \
                 .extract_first("")
-            # item['text'] = forward_reason + forward_from
-            text = forward_reason + forward_from
+            item['text'] = forward_reason + forward_from
 
-            # 普通微博
-            is_normal = u"转发了" not in weibo.css('span::text').extract_first()
-            # 多图
             has_pics = weibo.css(
                 'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
                 .extract_first()
@@ -92,12 +88,11 @@ class WeiboStatusSpider(CommonSpider):
             if not has_orig_text:
                 src_text = remove_tags(
                     weibo.css('span.ctt').extract_first(""))
-                text = text + src_text
+                item['text'] += src_text
                 if not has_pics:
                     # 没有多图
                     if not has_orig_pic:
                         # 没有图片
-                        item['text'] = text
                         yield item
                     else:
                         # 有图片
@@ -105,7 +100,6 @@ class WeiboStatusSpider(CommonSpider):
                             has_orig_pic)
                         request = Request(singel_url,
                                           callback=self.parse_weibo_image_src)
-                        request.meta['text'] = text
                         request.meta['item'] = item
                         request.meta['pics_count'] = 1
                         yield request
@@ -113,13 +107,11 @@ class WeiboStatusSpider(CommonSpider):
                     # 多图
                     request = Request(has_pics,
                                       callback=self.parse_weibo_image)
-                    request.meta['text'] = text
                     request.meta['item'] = item
                     yield request
             else:
                 request = Request("http://weibo.cn{}".format(has_orig_text),
                                   callback=self.parse_orig_text)
-                request.meta['text'] = text
                 request.meta['item'] = item
                 yield request
 
@@ -181,7 +173,6 @@ class WeiboStatusSpider(CommonSpider):
         yield item
 
     def parse_orig_text(self, response):
-        text = response.request.meta['text']
         item = response.request.meta['item']
         weibos = response.css('.c[id^=M_]')
         weibo = weibos[0] if weibos else None
@@ -190,13 +181,12 @@ class WeiboStatusSpider(CommonSpider):
                 'div a[href^="/mblog/picAll/"]::attr(href)') \
                 .extract_first()
             has_orig_pic = weibo.css('.ib a::attr(href)').extract_first()
-            text += remove_tags(
+            item['text'] += remove_tags(
                 weibo.css('span.ctt').extract_first())
             if not has_pics:
                 # 没有多图
                 if not has_orig_pic:
                     # 没有图片
-                    item['text'] = text
                     yield item
                 else:
                     # 有图片
@@ -204,7 +194,6 @@ class WeiboStatusSpider(CommonSpider):
                         has_orig_pic)
                     request = Request(singel_url,
                                       callback=self.parse_weibo_image_src)
-                    request.meta['text'] = text
                     request.meta['item'] = item
                     request.meta['pics_count'] = 1
                     yield request
@@ -212,7 +201,6 @@ class WeiboStatusSpider(CommonSpider):
                 # 多图
                 request = Request("http://weibo.cn{}".format(has_pics),
                                   callback=self.parse_weibo_image)
-                request.meta['text'] = text
                 request.meta['item'] = item
                 yield request
 
@@ -223,14 +211,12 @@ class WeiboStatusSpider(CommonSpider):
 
     def parse_weibo_image(self, response):
         item = response.request.meta['item']
-        text = response.request.meta['text']
         urls = response.css(
             '.c a img::attr(src)').extract()
         count = len(urls)
         for url in urls:
             request = Request(self._translate_thumb_to_large_url(url),
                               callback=self.parse_weibo_image_src)
-            request.meta['text'] = text
             request.meta['item'] = item
             request.meta['pics_count'] = count
             yield request
@@ -249,7 +235,6 @@ class WeiboStatusSpider(CommonSpider):
         }
         item['pictures'] += [pic]
         if count == len(item['pictures']):
-            item['text'] = response.request.meta['text']
             yield item
 
     def _translate_thumb_to_large_url(self, thumb_url):
