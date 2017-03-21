@@ -119,6 +119,6 @@ class QqPhotoSpider(CommonSpider):
                 status['publishTime'] = datetime.datetime.fromtimestamp(time_dict.get(key, 0)).strftime('%Y-%m-%d %H:%M:%S')
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
-                self.logger.debug("status*======={}", status)
-                if not ('pictures' in status and len(status['pictures']) > 0 and status['text'] == ''):
+                self.logger.debug("status*======={}".format(status))
+                if 'pictures' in status and len(status['pictures']) > 0 or len(status['text']) > 0:
                     yield status
