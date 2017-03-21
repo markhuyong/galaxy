@@ -30,7 +30,9 @@ class QqStatusSpider(CommonSpider):
 
         self.logger.debug("body======={}".format(body))
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+        if 'vFeeds' not in body['data']:
+            raise ValueError("user have no shuoshuo.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
@@ -72,9 +74,5 @@ class QqStatusSpider(CommonSpider):
                         item['pictures'] = pictures
 
             self.logger.debug("item*======={}".format(item))
-            # if len(item['pictures']) and item['text'] == '':
-            #     ValueError("Parse item encounter errors.")
-            # else:
-            #     yield item
             if 'pictures' in item and len(item['pictures']) > 0 or len(item['text']) > 0:
                 yield item

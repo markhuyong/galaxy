@@ -41,7 +41,12 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            # raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+
+        if 'vFeeds' not in body['code']:
+            # raise ValueError("have no photos or your have no right to access.")
+            raise ValueError("user have no albums.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
@@ -76,7 +81,10 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+
+        if 'photos' not in body['code']:
+            raise ValueError("album have no photos.")
 
         photos_dict = body['data']['photos']
         for photos_key in body['data']['photos']:
