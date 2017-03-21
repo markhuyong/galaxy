@@ -83,7 +83,7 @@ class QqPhotoSpider(CommonSpider):
         if body['code'] != 0:
             raise ValueError(body['message'])
 
-        if 'photos' not in body['code']:
+        if 'photos' not in body['data']:
             raise ValueError("album have no photos.")
 
         photos_dict = body['data']['photos']

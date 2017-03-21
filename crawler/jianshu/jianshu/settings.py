@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = 'jianshu.spiders'
 
 DOWNLOADER_MIDDLEWARES = {
     # Engine side
-    'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
+    # 'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
     #'scrapy_splash.SplashCookiesMiddleware': 723,
     #'scrapy_splash.SplashMiddleware': 725,
     #'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
@@ -22,7 +22,7 @@ SPIDER_MIDDLEWARES = {
 #DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 #HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
 
-# USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
 COOKIES_ENABLED = True
 COOKIES_DEBUG = True
 

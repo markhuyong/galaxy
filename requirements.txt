@@ -6,3 +6,4 @@ redis
 demjson
 selenium
 qqlib
+python-dateutil
