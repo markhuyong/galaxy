@@ -4,6 +4,7 @@ import sys
 
 import logging
 
+import datetime
 from scrapy.http.request import Request
 import json
 
@@ -115,7 +116,7 @@ class QqPhotoSpider(CommonSpider):
 
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
-                status['publishTime'] = time_dict.get(key, 0) * 1000
+                status['publishTime'] = datetime.datetime.fromtimestamp(time_dict.get(key, 0)).strftime('%Y-%m-%d %H:%M:%S')
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}", status)

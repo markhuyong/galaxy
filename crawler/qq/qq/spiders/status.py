@@ -3,6 +3,7 @@
 import sys
 from scrapy.http.request import Request
 import json
+import datetime
 from ..items import QqStatusItem
 
 from ..utils import CommonSpider
@@ -40,7 +41,7 @@ class QqStatusSpider(CommonSpider):
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['publishTime'] = feed['comm']['time']
+            item['publishTime'] = datetime.datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
             item['text'] = feed['operation']['share_info']['summary']
 
             # get photo urls
