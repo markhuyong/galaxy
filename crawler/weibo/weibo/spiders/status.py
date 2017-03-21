@@ -53,9 +53,10 @@ class WeiboStatusSpider(CommonSpider):
                 'input[name=mp]::attr(value)').extract_first("0"))
 
         next_page_flag = True if u"下页" in res.css('#pagelist').css(
-            'div a::text').extract_first() else False
-        next_page_num = int(res.css('#pagelist').css(
-            'div a::attr(href)').re_first(u'page=(\d+)')) or 0
+            'div a::text').extract_first("") else False
+        num_extractor = res.css('#pagelist').css(
+            'div a::attr(href)').re_first(u'page=(\d+)')
+        next_page_num = int(num_extractor) if num_extractor else 0
 
         for weibo in weibo_status:
             item = WeiboStatusItem()

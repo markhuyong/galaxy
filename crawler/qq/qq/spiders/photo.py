@@ -120,5 +120,5 @@ class QqPhotoSpider(CommonSpider):
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}", status)
-                if not (len(status['pictures']) and status['text'] == ''):
+                if not ('pictures' in status and len(status['pictures']) > 0 and status['text'] == ''):
                     yield status

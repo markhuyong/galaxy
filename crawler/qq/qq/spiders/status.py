@@ -76,5 +76,5 @@ class QqStatusSpider(CommonSpider):
             #     ValueError("Parse item encounter errors.")
             # else:
             #     yield item
-            if not (len(item['pictures']) and item['text'] == ''):
+            if not ('pictures' in item and len(item['pictures']) > 0 and item['text'] == ''):
                 yield item
