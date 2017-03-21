@@ -72,4 +72,9 @@ class QqStatusSpider(CommonSpider):
                         item['pictures'] = pictures
 
             self.logger.debug("item*======={}", item)
-            yield item
+            # if len(item['pictures']) and item['text'] == '':
+            #     ValueError("Parse item encounter errors.")
+            # else:
+            #     yield item
+            if not (len(item['pictures']) and item['text'] == ''):
+                yield item
