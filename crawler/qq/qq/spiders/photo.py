@@ -87,7 +87,7 @@ class QqPhotoSpider(CommonSpider):
 
             photo_dict = photos_dict[photos_key]
             for photo in photo_dict:
-                print photo
+                # print photo
                 desc = photo['desc']
                 pic = PictureItem()
                 pic['url'] = photo['1']['url']

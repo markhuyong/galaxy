@@ -42,7 +42,7 @@ class QqStatusSpider(CommonSpider):
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
             item['publishTime'] = datetime.datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
-            item['text'] = feed['operation']['share_info']['summary']
+            item['text'] = feed['summary']['summary']
 
             # get photo urls
             if 'pic' in feed:
