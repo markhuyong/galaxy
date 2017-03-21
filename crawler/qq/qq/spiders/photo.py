@@ -4,7 +4,6 @@ import sys
 
 import logging
 
-from scrapy.exceptions import CloseSpider
 from scrapy.http.request import Request
 import json
 
@@ -34,6 +33,7 @@ class QqPhotoSpider(CommonSpider):
             self.start_urls = [BaseHelper.get_album_url(uid)]
 
     def parse(self, response):
+        self.logger.debug("{} {}".format("=" * 10, str(response.body)))
         try:
             body = json.loads(response.body)
         except ValueError, e:
@@ -118,5 +118,5 @@ class QqPhotoSpider(CommonSpider):
                 status['publishTime'] = time_dict.get(key, 0) * 1000
                 status['text'] = ' ' if key == 'extra' else key.strip()
                 status['pictures'] = value
-                logger.debug("status*======={}", status)
+                self.logger.debug("status*======={}", status)
                 yield status

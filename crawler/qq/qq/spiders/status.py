@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import logging
 from scrapy.http.request import Request
 import json
 from ..items import QqStatusItem
@@ -11,8 +10,6 @@ from ..utils import BaseHelper
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-logger = logging.getLogger(__name__)
 
 
 class QqStatusSpider(CommonSpider):
@@ -24,13 +21,13 @@ class QqStatusSpider(CommonSpider):
         uid = kwargs.get('uid')
         # uid = 646055372
         if uid:
-            logger.debug("uid = {}".format(uid))
+            self.logger.debug("uid = {}".format(uid))
             self.start_urls = [BaseHelper.get_shuoshuo_url(uid)]
 
     def parse(self, response):
         body = json.loads(response.body)
 
-        logger.debug("body======={}".format(body))
+        self.logger.debug("body======={}".format(body))
         if body['code'] != 0:
             raise ValueError("have no photos or your have no right to access.")
 
@@ -73,5 +70,5 @@ class QqStatusSpider(CommonSpider):
 
                         item['pictures'] = pictures
 
-            logger.debug("item*======={}", item)
+            self.logger.debug("item*======={}", item)
             yield item
