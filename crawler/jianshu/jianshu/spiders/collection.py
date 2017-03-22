@@ -30,11 +30,13 @@ class CollectionSpider(CommonSpider):
             self.start_urls = [BaseHelper.get_collection_url(uid)]
 
     def parse(self, response):
-        cid = Selector(response) \
-            .xpath('//script[@data-name="collection"]/text()') \
-            .re_first('"id":(\d+)')
+        sel = Selector(response)
+        follow_button = '//div[@class="follow-button"]/@props-data-collection-id'
+        script_collection = '//script[@data-name="collection"]/text()'
+        cid = sel.xpath(follow_button).extract_first() or sel.xpath(
+            script_collection).re_first('"id":(\d+)')
         if not cid:
-            raise ValueError('no collection articles, collection id in None.')
+            raise ValueError('no collection articles, collection id is None.')
         if not self.done:
             cookie_jar = response.meta.setdefault('cookiejar', CookieJar())
             cookie_jar.extract_cookies(response, response.request)
