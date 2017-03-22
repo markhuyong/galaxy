@@ -41,11 +41,9 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            # raise ValueError("have no photos or your have no right to access.")
             raise ValueError(body['message'])
 
-        if 'vFeeds' not in body['code']:
-            # raise ValueError("have no photos or your have no right to access.")
+        if 'vFeeds' not in body['data']:
             raise ValueError("user have no albums.")
 
         last_attach = body['data']['attach_info']
@@ -69,9 +67,9 @@ class QqPhotoSpider(CommonSpider):
                                                          last_attach_temp)
                     yield Request(photo_url, self.parse_photo)
 
-                if remain_count > 0:
-                    next_page = BaseHelper.get_album_url(self.uid, last_attach)
-                    yield Request(next_page)
+        if remain_count > 0:
+            next_page = BaseHelper.get_album_url(self.uid, last_attach)
+            yield Request(next_page)
 
     def parse_photo(self, response):
 
