@@ -47,8 +47,6 @@ class LectureSpider(CommonSpider):
         request.meta['item'] = item
         yield request
 
-        # yield item
-
     def parse_lecture_json(self, response):
         body = json.loads(response.body)
         logger.debug("json_body============{}".format(body))
@@ -105,8 +103,3 @@ class LectureSpider(CommonSpider):
         response = s.send(r)
         numbers = Selector(response).css('div.info::text').re(ur'([0-9]+)') or [0]
         return numbers[0]
-    #
-    # def _get_parse_article_number_request(self, record, key):
-    #     request = Request(record['url'], callback=self.parse_article_number)
-    #     request.meta[key] = record
-    #     return request
