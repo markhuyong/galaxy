@@ -39,7 +39,7 @@ class CollectionSpider(CommonSpider):
             script_collection).re_first('"id":(\d+)')
         if not cid:
             raise ValueError('no collection articles, collection id is None.')
-        if not self.done:
+        while not self.done:
             cookie_jar = response.meta.setdefault('cookiejar', CookieJar())
             cookie_jar.extract_cookies(response, response.request)
             if "/c/" in response.url:
