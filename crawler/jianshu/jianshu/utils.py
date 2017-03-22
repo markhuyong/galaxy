@@ -15,6 +15,8 @@ class BaseHelper(object):
     COLLECTION_URL = "{base}/{uuid}"
     COLLECTION_ARTICLES_URL = "{base}/mobile/collections/{cid}/public_notes" \
                               "?order_by=commented_at&page={page}&count={count}"
+    NOTEBOOKS_ARTICLES_URL = "{base}/mobile/notebooks/{cid}/public_notes" \
+                            "?order_by=commented_at&page={page}&count={count}"
     LECTURES_URL = "{base}/users/{uid}/collections_and_notebooks?slug={uid}"
     COLLECTION_SUFFIX = "?order_by=commented_at&page={}"
 
@@ -43,5 +45,10 @@ class BaseHelper(object):
     @classmethod
     def get_collection_articles_url(cls, cid, page, count):
         return cls.COLLECTION_ARTICLES_URL.format(base=cls.BASE, cid=cid,
+                                                  page=page,
+                                                  count=count)
+    @classmethod
+    def get_notebooks_articles_url(cls, cid, page, count):
+        return cls.NOTEBOOKS_ARTICLES_URL.format(base=cls.BASE, cid=cid,
                                                   page=page,
                                                   count=count)
