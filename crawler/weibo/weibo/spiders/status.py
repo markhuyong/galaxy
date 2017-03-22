@@ -66,52 +66,52 @@ class WeiboStatusSpider(CommonSpider):
                 weibo.css('.ct').extract_first())
 
             item['pictures'] = []
+
             # parse text
+            # 有引文
+            has_orig_text = weibo.css('div a[href^="/comment/"]::attr(href)') \
+                .extract_first()
 
             forward_from = remove_tags(weibo
                                        .xpath('//div/span[@class="cmt"]')
                                        .extract_first(""))
             forward_reason = weibo \
-                .xpath('//div/span[@class="ct"]/../text()') \
+                .xpath(u'//div/div[contains(., "转发理由:")]/text()') \
                 .extract_first("")
-            item['text'] = forward_reason + forward_from
 
+            srt_text = self._get_orig_text(
+                "http://weibo.cn{}".format(has_orig_text),
+                response.request.cookies) \
+                if has_orig_text else remove_tags(
+                weibo.css('span.ctt').extract_first(""))
+
+            item['text'] = forward_reason + forward_from + srt_text
+
+            # parse pics
             has_pics = weibo.css(
                 'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
                 .extract_first()
             # 有原图
             has_orig_pic = weibo.css('img.ib::attr(src)').extract_first()
 
-            # 有引文
-            has_orig_text = weibo.css('div a[href^="/comment/"]::attr(href)') \
-                .extract_first()
-            if not has_orig_text:
-                src_text = remove_tags(
-                    weibo.css('span.ctt').extract_first(""))
-                item['text'] += src_text
-                if not has_pics:
-                    # 没有多图
-                    if not has_orig_pic:
-                        # 没有图片
-                        yield item
-                    else:
-                        # 有图片
-                        singel_url = self._translate_thumb_to_large_url(
-                            has_orig_pic)
-                        request = Request(singel_url,
-                                          callback=self.parse_weibo_image_src)
-                        request.meta['item'] = item
-                        request.meta['pics_count'] = 1
-                        yield request
+            if not has_pics:
+                # 没有多图
+                if not has_orig_pic:
+                    # 没有图片
+                    yield item
                 else:
-                    # 多图
-                    request = Request(has_pics,
-                                      callback=self.parse_weibo_image)
+                    # 有图片
+                    singel_url = self._translate_thumb_to_large_url(
+                        has_orig_pic)
+                    request = Request(singel_url,
+                                      callback=self.parse_weibo_image_src)
                     request.meta['item'] = item
+                    request.meta['pics_count'] = 1
                     yield request
             else:
-                request = Request("http://weibo.cn{}".format(has_orig_text),
-                                  callback=self.parse_orig_text)
+                # 多图
+                request = Request(has_pics,
+                                  callback=self.parse_weibo_image)
                 request.meta['item'] = item
                 yield request
 
@@ -171,6 +171,17 @@ class WeiboStatusSpider(CommonSpider):
             '//div/div/span[@class="ctt"]/..').extract_first("")
         item['text'] += remove_tags(comments)
         yield item
+
+    def _get_orig_text(self, url, cookie):
+        import requests
+        req = requests.Request('GET', url, cookies=cookie)
+        r = req.prepare()
+        s = requests.Session()
+        response = s.send(r)
+        weibos = Selector(response).css('.c[id^=M_]')
+        weibo = weibos[0] if weibos else None
+        return remove_tags(
+            weibo.css('span.ctt').extract_first(""))
 
     def parse_orig_text(self, response):
         item = response.request.meta['item']
