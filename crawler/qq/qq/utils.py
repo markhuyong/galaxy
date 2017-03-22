@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
+import urllib
 
 from scrapy.http.headers import Headers
 
@@ -41,7 +42,7 @@ class BaseHelper(object):
         url = cls.SHUOSHU_URL.replace("USER_QQ_NUMBER", uid) \
             .replace("PAGECOUNT", cls.PAGE_COUNT)
         return url if last_attach is None \
-            else url + "&res_attach=" + unicode(str(last_attach), "UTF-8")
+            else url + "&res_attach=" + cls._quote_url(last_attach)
 
     def get_code_url(self, uid):
         return self.SHUOSHU_URL.replace("USER_QQ_NUMBER", uid)
@@ -60,7 +61,7 @@ class BaseHelper(object):
         url = cls.ALBUM_URL.replace("USER_QQ_NUMBER", uid)
 
         return url if last_attach is None \
-            else url + "&res_attach=" + unicode(str(last_attach), "UTF-8")
+            else url + "&res_attach=" + cls._quote_url(last_attach)
 
     @classmethod
     def get_photo_url(cls, uid, album_id, ps, pn, last_attach=None):
@@ -69,10 +70,14 @@ class BaseHelper(object):
             .replace("PS", ps) \
             .replace("PN", pn)
         return url if last_attach is None \
-            else url + "&res_attach=" + unicode(str(last_attach), "UTF-8")
+            else url + "&res_attach=" + cls._quote_url(last_attach)
 
     @staticmethod
     def get_cookie_key_prefix(spider):
         sep = "_"
         assert spider.name.index(sep) > 0
         return "{}:Cookies".format(spider.name.split(sep)[0])
+
+    @staticmethod
+    def _quote_url(url):
+        return urllib.quote(unicode(str(url), "UTF-8"))

@@ -37,12 +37,12 @@ class QqStatusSpider(CommonSpider):
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
 
-
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
             item['publishTime'] = datetime.datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
-            item['text'] = feed['summary']['summary']
+            item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
+            item['pictures'] = []
 
             # get photo urls
             if 'pic' in feed:
@@ -69,10 +69,10 @@ class QqStatusSpider(CommonSpider):
                             "height": height
                         }]
 
-                        item['pictures'] = pictures
+                item['pictures'] = pictures
 
             self.logger.debug("item*======={}".format(item))
-            if 'pictures' in item and len(item['pictures']) > 0 or len(item['text']) > 0:
+            if len(item['pictures']) > 0 or len(item['text']) > 0:
                 yield item
 
         if remain_count > 0:
