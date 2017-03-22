@@ -56,8 +56,7 @@ class CollectionSpider(CommonSpider):
             item = CollectionItem()
             item['title'] = row['title']
             item['url'] = "/p/{}".format(row['slug'])
-            item['publishTime'] = parser.parse(row['first_shared_at']) \
-                .strftime('%Y-%m-%d %H:%M:%S')
+            item['publishTime'] = row['first_shared_at']
             item['articleRead'] = row['views_count']
             item['articleComment'] = row['public_comments_count']
             item['articleLike'] = row['likes_count']
