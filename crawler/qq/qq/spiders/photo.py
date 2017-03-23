@@ -16,8 +16,6 @@ from ..utils import BaseHelper
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-logger = logging.getLogger(__name__)
-
 
 class QqPhotoSpider(CommonSpider):
     name = "qq_photo_status"
@@ -29,7 +27,7 @@ class QqPhotoSpider(CommonSpider):
 
         uid = kwargs.get('uid')
         if uid:
-            logger.debug("uid item = {}".format(uid))
+            self.logger.debug("uid item = {}".format(uid))
             self.uid = uid
             self.start_urls = [BaseHelper.get_album_url(uid)]
 
@@ -50,11 +48,16 @@ class QqPhotoSpider(CommonSpider):
         remain_count = body['data']['remain_count']
 
         for feed in body['data']['vFeeds']:
-            if 'pic' in feed and not "说说和日志相册" == feed['pic']['albumname']:
+            def is_valid():
+                skip = "说说和日志相册" == feed['pic']['albumname'] or feed['pic'][
+                                                                    'allow_access'] == 0
+                return 'pic' in feed and not skip
+
+            if is_valid():
                 album_id = feed['pic']['albumid']
                 photo_num = feed['pic']['albumnum']
 
-                fetch_len = photo_num // self.fetch_size
+                fetch_len = photo_num // self.fetch_size + 1
                 last_fetch_size = photo_num % self.fetch_size
                 for n in xrange(0, fetch_len):
                     already_fetch_num = n * self.fetch_size
@@ -93,7 +96,6 @@ class QqPhotoSpider(CommonSpider):
 
             photo_dict = photos_dict[photos_key]
             for photo in photo_dict:
-                # print photo
                 desc = photo['desc']
                 pic = PictureItem()
                 pic['url'] = photo['1']['url']
@@ -115,16 +117,16 @@ class QqPhotoSpider(CommonSpider):
                         else:
                             image_dict[ext_key] += [pic]
                     else:
-                        # ext_key += " "
                         image_dict[ext_key] += [pic]
                         time_dict[ext_key] = photo['uUploadTime']
                 pre_time = photo['uUploadTime']
 
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
-                status['publishTime'] = datetime.datetime.fromtimestamp(time_dict.get(key, 0)).strftime('%Y-%m-%d %H:%M:%S')
-                status['text'] = ' ' if key == 'extra' else key.strip()
+                status['publishTime'] = datetime.datetime.fromtimestamp(
+                    time_dict.get(key, 0)).strftime('%Y-%m-%d %H:%M:%S')
+                status['text'] = '' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}".format(status))
-                if 'pictures' in status and len(status['pictures']) > 0 or len(status['text']) > 0:
+                if status['pictures'] or status['text']:
                     yield status

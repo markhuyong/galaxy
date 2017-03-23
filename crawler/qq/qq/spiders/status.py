@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from scrapy.http.request import Request
 import json
-import datetime
+from scrapy.http.request import Request
+from datetime import datetime
 from ..items import QqStatusItem
 
 from ..utils import CommonSpider
@@ -20,7 +20,6 @@ class QqStatusSpider(CommonSpider):
         super(CommonSpider, self).__init__(*args, **kwargs)
 
         uid = kwargs.get('uid')
-        # uid = 646055372
         if uid:
             self.logger.debug("uid = {}".format(uid))
             self.start_urls = [BaseHelper.get_shuoshuo_url(uid)]
@@ -40,7 +39,7 @@ class QqStatusSpider(CommonSpider):
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['publishTime'] = datetime.datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
+            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
             item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
             item['pictures'] = []
 
@@ -72,7 +71,7 @@ class QqStatusSpider(CommonSpider):
                 item['pictures'] = pictures
 
             self.logger.debug("item*======={}".format(item))
-            if len(item['pictures']) > 0 or len(item['text']) > 0:
+            if item['pictures'] or item['text']:
                 yield item
 
         if remain_count > 0:
