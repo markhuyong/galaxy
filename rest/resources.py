@@ -267,13 +267,13 @@ class CrawlResource(ServiceResource):
         errors = result.get("errors")
         if errors:
             response["success"] = False
-            response["message"] = str(errors)
+            response["message"] = str(errors[0])
             return response
 
         items_dropped = result.get("items_dropped")
         if items_dropped:
             response["success"] = False
-            response["message"] = str(items_dropped)
+            response["message"] = str(items_dropped[0])
             return response
 
         info_spiders = ["jianshu_lectures", "qq_info", "weibo_info"]
