@@ -37,7 +37,10 @@ class CookiesMiddleware(RetryMiddleware):
             elem = random.choice(redisKeys)
             if prefix in elem:
                 cookie = json.loads(self.rconn.get(elem))
+                if request.cookies:
+                    cookie.update(request.cookies)
                 request.cookies = cookie
+                # request.cookies = request.cookies.update(cookie) if isinstance(request.cookies, dict) else cookie
                 request.meta["accountText"] = elem.split(prefix)[-1]
                 break
             else:

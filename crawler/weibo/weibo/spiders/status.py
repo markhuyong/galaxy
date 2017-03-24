@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
 
-import logging
+import json
 import sys
 import re
-from datetime import date, datetime, timedelta
+import urllib
+
+from dateutil.parser import parser
+from scrapy.http.cookies import CookieJar
 
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
     from io import BytesIO
 
-from PIL import Image
 from w3lib.html import remove_tags
 
 from scrapy import Request
-from scrapy import Selector
 
 from ..items import WeiboStatusItem
 
 from ..utils import CommonSpider
 from ..utils import BaseHelper
-
-logger = logging.getLogger(__name__)
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -32,6 +31,8 @@ class WeiboStatusSpider(CommonSpider):
     uid = 0
     total_page = 3
     max_download_page = 3000
+    containerid = 0
+    done = False
 
     def __init__(self, *args, **kwargs):
         super(CommonSpider, self).__init__(*args, **kwargs)
@@ -40,216 +41,128 @@ class WeiboStatusSpider(CommonSpider):
         if uid:
             self.uid = uid
             self.logger.debug("uid item = {}".format(uid))
-            self.start_urls = [BaseHelper.get_weibo_status_url(uid)]
+            self.start_urls = [BaseHelper.get_m_weibo_home_url(uid)]
 
     def parse(self, response):
         if u"还没发过微博" in str(response):
             raise ValueError(u"TA还没发过微博")
 
-        res = Selector(response)
-        weibo_status = res.css('.c[id^=M_]')
-        if self.total_page == 0:
-            self.total_page = int(res.css('#pagelist').css(
-                'input[name=mp]::attr(value)').extract_first("0"))
+        self.logger.debug("home response *****{}".format(str(response.body)))
+        self.logger.debug("home response *****{}".format(str(response.headers)))
+        cookie_jar = response.meta.setdefault('cookiejar', CookieJar())
+        cookie_jar.extract_cookies(response, response.request)
+        cookies_str = str(response.headers['Set-Cookie'])
+        if 'M_WEIBOCN_PARAMS' not in cookies_str:
+            ValueError("parse cookie encounter error.")
+        matches = re.findall(u'[^l]fid=(\d+)', urllib.unquote(cookies_str))
+        if not matches:
+            ValueError("get fid failed.")
+        fid = matches[0]
+        first_url = BaseHelper.get_m_weibo_status_url(self.uid,
+                                                      fid)
 
-        next_page_flag = True if u"下页" in res.css('#pagelist').css(
-            'div a::text').extract_first("") else False
-        num_extractor = res.css('#pagelist').css(
-            'div a::attr(href)').re_first(u'page=(\d+)')
-        next_page_num = int(num_extractor) if num_extractor else 0
+        # cookie_jar.add_cookie_header()
+        headers = BaseHelper.get_headers()
+        request = Request(first_url,
+                          headers=headers,
+                          cookies= cookie_jar._cookies,
+                          callback=self.parse_weibo_containerid)
+        cookie_jar.add_cookie_header(request)  # apply Set-Cookie ourselves
+        request.meta['cookiejar'] = response.meta['cookiejar']
+        yield request
 
-        for weibo in weibo_status:
+    def parse_weibo_containerid(self, response):
+        body = json.loads(response.body)
+        for tab in body['tabsInfo']['tabs']:
+            if tab.get('tab_type') == "weibo":
+                self.containerid = tab['containerid']
+        if self.containerid == 0:
+            ValueError("get weibo containerid failed.")
+
+        first_url = BaseHelper.get_m_weibo_status_url(self.uid,
+                                                      self.containerid)
+        headers = BaseHelper.get_headers()
+        request = Request(first_url,
+                          headers=headers,
+                          callback=self.parse_weibo)
+        request.meta['cookiejar'] = response.meta['cookiejar']
+        yield request
+
+    def parse_weibo(self, response):
+
+        body = json.loads(response.body)
+
+        for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             item = WeiboStatusItem()
-
-            # parse published_at
-            item['publishTime'] = self._parse_weibo_published_at(
-                weibo.css('.ct').extract_first())
-
-            item['pictures'] = []
+            item['publishTime'] = card['mblog']['created_at']
 
             # parse text
-            # 有引文
-            has_orig_text = weibo.css('div a[href^="/comment/"]::attr(href)') \
-                .extract_first()
+            item['text'] = ''
+            if 'raw_text' in card['mblog']:
+                item['text'] = card['mblog']['raw_text']
+            else:
+                item['text'] = remove_tags(card['mblog']['text'])
 
-            forward_from = remove_tags(weibo
-                                       .xpath('//div/span[@class="cmt"]')
-                                       .extract_first(""))
-            forward_reason = weibo \
-                .xpath(u'//div/div[contains(., "转发理由:")]/text()') \
-                .extract_first("")
-
-            srt_text = self._get_orig_text(
-                "http://weibo.cn{}".format(has_orig_text),
-                response.request.cookies) \
-                if has_orig_text else remove_tags(
-                weibo.css('span.ctt').extract_first(""))
-
-            item['text'] = forward_reason + forward_from + srt_text
+            if 'retweeted_status' in card['mblog']:
+                screen_name = card['mblog']['retweeted_status']['user'][
+                    'screen_name']
+                text = remove_tags(card['mblog']['retweeted_status']['text'])
+                retweeted = "@{}{}".format(screen_name, text)
+                item['text'] = retweeted.replace(u"...全文", '')
 
             # parse pics
-            has_pics = weibo.css(
-                'div a[href^="http://weibo.cn/mblog/picAll/"]::attr(href)') \
-                .extract_first()
-            # 有原图
-            has_orig_pic = weibo.css('img.ib::attr(src)').extract_first()
+            item['pictures'] = []
+            pics = []
+            if 'retweeted_status' in card['mblog']:
+                pics = card['mblog']['retweeted_status'].get('pics') or []
 
-            if not has_pics:
-                # 没有多图
-                if not has_orig_pic:
-                    # 没有图片
-                    yield item
-                else:
-                    # 有图片
-                    singel_url = self._translate_thumb_to_large_url(
-                        has_orig_pic)
-                    request = Request(singel_url,
-                                      callback=self.parse_weibo_image_src)
-                    request.meta['item'] = item
-                    request.meta['pics_count'] = 1
-                    yield request
             else:
-                # 多图
-                request = Request(has_pics,
-                                  callback=self.parse_weibo_image)
-                request.meta['item'] = item
-                yield request
-
-        def has_next():
-            return next_page_flag and next_page_num <= self.total_page and \
-                   next_page_num <= self.max_download_page
-
-        if has_next():
-            next_page = BaseHelper.get_weibo_status_url(self.uid,
-                                                        next_page_num)
-            yield Request(url=next_page)
-
-    def _parse_weibo_published_at(self, time_str):
-        pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
-        matches_list = pattern.findall(time_str)
-        for match in matches_list:
-            return match
-
-        pattern = re.compile(u'(\d{1,2}月\d{1,2}日 \d{2}:\d{2})')
-        matches_list = pattern.findall(time_str)
-        for match in matches_list:
-            return str(date.today().year) + '-' + match.replace(u'月', '-') \
-                .replace(u'日', '') + ":00"
-
-        pattern = re.compile(u'今天 (\d{2}:\d{2})')
-        matches_list = pattern.findall(time_str)
-        for match in matches_list:
-            return str(date.today()) + ' ' + match + ":00"
-
-        pattern = re.compile(u'(\d{2})分钟前')
-        matches_list = pattern.findall(time_str)
-        for match in matches_list:
-            return str(
-                (datetime.now() - timedelta(minutes=int(match))).strftime(
-                    "%Y-%m-%d %H:%M:%S"))
-
-    def _parse_weibo_text(self, weibo_css):
-        forward_from = ""
-        forward_reason = ""
-        comment_list = weibo_css.css('.cmt')
-        for cm in comment_list:
-            cm_text = cm.css('::text').extract_first()
-            if u"转发了" in cm_text:
-                forward_from = remove_tags(weibo_css
-                                           .xpath('//div/span[@class="cmt"]')
-                                           .extract_first(""))
-            elif u"转发理由:" in cm_text:
-                forward_reason = weibo_css \
-                    .xpath('//div/span[@class="ct"]/../text()') \
-                    .extract_first("")
-
-        return forward_reason + forward_from
-
-    def parse_all_text(self, response):
-        item = response.request.meta['item']
-        comments = response.xpath(
-            '//div/div/span[@class="ctt"]/..').extract_first("")
-        item['text'] += remove_tags(comments)
-        yield item
-
-    def _get_orig_text(self, url, cookie):
-        import requests
-        req = requests.Request('GET', url, cookies=cookie)
-        r = req.prepare()
-        s = requests.Session()
-        response = s.send(r)
-        weibos = Selector(response).css('.c[id^=M_]')
-        weibo = weibos[0] if weibos else None
-        return remove_tags(
-            weibo.css('span.ctt').extract_first(""))
-
-    def parse_orig_text(self, response):
-        item = response.request.meta['item']
-        weibos = response.css('.c[id^=M_]')
-        weibo = weibos[0] if weibos else None
-        if weibo:
-            has_pics = weibo.css(
-                'div a[href^="/mblog/picAll/"]::attr(href)') \
-                .extract_first()
-            has_orig_pic = weibo.css('.ib a::attr(href)').extract_first()
-            item['text'] += remove_tags(
-                weibo.css('span.ctt').extract_first())
-            if not has_pics:
-                # 没有多图
-                if not has_orig_pic:
-                    # 没有图片
-                    yield item
-                else:
-                    # 有图片
-                    singel_url = self._translate_thumb_to_large_url(
-                        has_orig_pic)
-                    request = Request(singel_url,
-                                      callback=self.parse_weibo_image_src)
-                    request.meta['item'] = item
-                    request.meta['pics_count'] = 1
-                    yield request
-            else:
-                # 多图
-                request = Request("http://weibo.cn{}".format(has_pics),
-                                  callback=self.parse_weibo_image)
-                request.meta['item'] = item
-                yield request
-
-    def _get_weibo_image_request(self, url, key, text):
-        request = Request(url, callback=self.parse_weibo_image)
-        request.meta[key] = text
-        return request
-
-    def parse_weibo_image(self, response):
-        item = response.request.meta['item']
-        urls = response.css(
-            '.c a img::attr(src)').extract()
-        count = len(urls)
-        for url in urls:
-            request = Request(self._translate_thumb_to_large_url(url),
-                              callback=self.parse_weibo_image_src)
-            request.meta['item'] = item
-            request.meta['pics_count'] = count
-            yield request
-
-    def parse_weibo_image_src(self, response):
-        item = response.request.meta['item']
-        count = response.request.meta['pics_count']
-        orig_image = Image.open(BytesIO(response.body))
-
-        width, height = orig_image.size
-        pic = {
-            "url": response.request.url,
-            "width": width,
-            "height": height
-
-        }
-        item['pictures'] += [pic]
-        if count == len(item['pictures']):
+                pics = card['mblog'].get('pics') or []
+            for pic in pics:
+                p = {"url": pic['large']['url'],
+                     "width": pic['large']['geo']['width'],
+                     "height": pic['large']['geo']['height']
+                     }
+                item['pictures'] += [p]
             yield item
 
-    def _translate_thumb_to_large_url(self, thumb_url):
-        return thumb_url.replace("^http://ss", "http://ww") \
-            .replace("&690$", ".jpg") \
-            .replace("/thumb180/", "/large/") \
-            .replace("/wap180/", "/large/")
+            next_page = body['cardlistInfo']['page']
+
+            def has_next():
+                return next_page and int(next_page) <= self.total_page and \
+                       int(next_page) <= self.max_download_page
+
+            if has_next():
+                next_page_url = BaseHelper.get_m_weibo_status_url(self.uid,
+                                                                  self.containerid,
+                                                                  next_page)
+                headers = BaseHelper.get_headers()
+                request = Request(next_page_url,
+                                  headers=headers,
+                                  callback=self.parse_weibo)
+                request.meta['cookiejar'] = response.meta['cookiejar']
+                yield request
+    #
+    # def _parse_weibo_published_at(self, time_str):
+    #     pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
+    #     matches_list = pattern.findall(time_str)
+    #     for match in matches_list:
+    #         return match
+    #
+    #     pattern = re.compile(u'(\d{1,2}\d{1,2} \d{2}:\d{2})')
+    #     matches_list = pattern.findall(time_str)
+    #     for match in matches_list:
+    #         return str(date.today().year) + '-' + match.replace(u'月', '-') \
+    #             .replace(u'日', '') + ":00"
+    #
+    #     pattern = re.compile(u'(\d{2}:\d{2})')
+    #     matches_list = pattern.findall(time_str)
+    #     for match in matches_list:
+    #         return str(date.today()) + ' ' + match + ":00"
+    #
+    #     pattern = re.compile(u'(\d{2})')
+    #     matches_list = pattern.findall(time_str)
+    #     for match in matches_list:
+    #         return str(
+    #             (datetime.now() - timedelta(minutes=int(match))).strftime(
+    #                 "%Y-%m-%d %H:%M:%S"))
