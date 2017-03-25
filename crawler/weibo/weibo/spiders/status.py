@@ -47,8 +47,6 @@ class WeiboStatusSpider(CommonSpider):
         if u"还没发过微博" in str(response):
             raise ValueError(u"TA还没发过微博")
 
-        self.logger.debug("home response *****{}".format(str(response.body)))
-        self.logger.debug("home response *****{}".format(str(response.headers)))
         cookie_jar = response.meta.setdefault('cookiejar', CookieJar())
         cookie_jar.extract_cookies(response, response.request)
         cookies_str = str(response.headers['Set-Cookie'])
@@ -61,7 +59,6 @@ class WeiboStatusSpider(CommonSpider):
         first_url = BaseHelper.get_m_weibo_status_url(self.uid,
                                                       fid)
 
-        # cookie_jar.add_cookie_header()
         headers = BaseHelper.get_headers()
         request = Request(first_url,
                           headers=headers,
@@ -109,7 +106,7 @@ class WeiboStatusSpider(CommonSpider):
                     'screen_name']
                 text = remove_tags(card['mblog']['retweeted_status']['text'])
                 retweeted = "@{}{}".format(screen_name, text)
-                item['text'] = retweeted.replace(u"...全文", '')
+                item['text'] += retweeted.replace(u"...全文", '')
 
             # parse pics
             item['pictures'] = []
