@@ -17,6 +17,8 @@ class BaseHelper(object):
     WEIBO_SEARCH_URL = "http://weibo.cn/search/user/?keyword={nick_name}"
     M_WEIBO_HOME_URL = "http://m.weibo.cn/u/{uid}"
     M_WEIBO_STATUS_URL = "http://m.weibo.cn/container/getIndex?type=uid&value={uid}&containerid={cid}&page={page}"
+    M_WEIBO_USER_URL = "http://m.weibo.cn/n/{nick_name}"
+    M_WEIBO_USER_INFO_URL = "http://m.weibo.cn/container/getIndex?type=uid&value={uid}"
 
     @classmethod
     def get_headers(cls):
@@ -51,6 +53,13 @@ class BaseHelper(object):
     @classmethod
     def get_m_weibo_home_url(cls, uid):
         return cls.M_WEIBO_HOME_URL.format(uid=uid)
+    @classmethod
+    def get_m_weibo_user_url(cls, nick_name):
+        return cls.M_WEIBO_USER_URL.format(nick_name=nick_name)
+
+    @classmethod
+    def get_m_weibo_user_info_url(cls, uid):
+        return cls.M_WEIBO_USER_INFO_URL.format(uid=uid)
 
     @staticmethod
     def get_cookie_key_prefix(spider):

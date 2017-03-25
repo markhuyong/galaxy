@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-
+import json
 import logging
+import re
 import sys
+
+from scrapy import Request
 from scrapy import Selector
 
 from ..items import WeiboUserItem
@@ -26,22 +29,37 @@ class WeiboInfoSpider(CommonSpider):
         if uid:
             self.nick_name = uid
             # self.logger.debug("uid item = {}".format(unicode(uid)))
-            self.start_urls = [BaseHelper.get_common_page_url(uid)]
+            self.start_urls = [BaseHelper.get_m_weibo_user_url(uid)]
+
+    def make_requests_from_url(self, url):
+        meta = {
+            'dont_redirect': True,
+            'handle_httpstatus_list': [302]
+        }
+        return Request(url, meta=meta, dont_filter=True)
 
     def parse(self, response):
-        res = Selector(response)
-        user_info_table = res.css('table:first-of-type')
-        find_nick_name = user_info_table.css(
-            'td:nth-child(2) a::text').extract_first()
-        if self.nick_name and self.nick_name == find_nick_name:
-            user_info = WeiboUserItem()
-            user_info['uid'] = user_info_table.css(
-                'td:first-of-type a::attr(href)').re_first('(\d+)')
-            if len(user_info['uid']) == 1:
-                user_info['uid'] = user_info_table.xpath(
-                    '//td/a[contains(@href, "attention")]/@href').re_first(
-                    'uid=(\d+)')
-            user_info['nick_name'] = find_nick_name
-            user_info['profile_image'] = user_info_table.css(
-                'td:nth-of-type(2) img::attr(src)').extract_first()
-            yield user_info
+        location = response.headers.get('Location')
+        if not (location and '/u/' in location):
+            ValueError("user isn't exist.")
+        uid_matcher = re.findall(r'/u/(\d+)', location)
+        if not uid_matcher:
+            ValueError("uid parser error.")
+        info_url = BaseHelper.get_m_weibo_user_info_url(uid_matcher[0])
+        headers = BaseHelper.get_headers()
+        request = Request(info_url,
+                          headers=headers,
+                          callback=self.parse_info)
+        yield request
+
+    def parse_info(self, response):
+        body = json.loads(response.body)
+        user_info = body.get('userInfo')
+        if not user_info:
+            ValueError("user isn't exist.")
+
+        item = WeiboUserItem()
+        item['uid'] = user_info['id']
+        item['nick_name'] = user_info['screen_name']
+        item['profile_image'] = user_info['profile_image_url']
+        yield item
