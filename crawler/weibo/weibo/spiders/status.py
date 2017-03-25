@@ -65,7 +65,7 @@ class WeiboStatusSpider(CommonSpider):
         headers = BaseHelper.get_headers()
         request = Request(first_url,
                           headers=headers,
-                          cookies= cookie_jar._cookies,
+                          cookies=cookie_jar._cookies,
                           callback=self.parse_weibo_containerid)
         cookie_jar.add_cookie_header(request)  # apply Set-Cookie ourselves
         request.meta['cookiejar'] = response.meta['cookiejar']
@@ -94,7 +94,8 @@ class WeiboStatusSpider(CommonSpider):
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             item = WeiboStatusItem()
-            item['publishTime'] = date_parse(card['mblog']['created_at']).isoformat()
+            item['publishTime'] = date_parse(
+                card['mblog']['created_at']).isoformat()
 
             # parse text
             item['text'] = ''
@@ -142,27 +143,3 @@ class WeiboStatusSpider(CommonSpider):
                                   callback=self.parse_weibo)
                 request.meta['cookiejar'] = response.meta['cookiejar']
                 yield request
-    #
-    # def _parse_weibo_published_at(self, time_str):
-    #     pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
-    #     matches_list = pattern.findall(time_str)
-    #     for match in matches_list:
-    #         return match
-    #
-    #     pattern = re.compile(u'(\d{1,2}\d{1,2} \d{2}:\d{2})')
-    #     matches_list = pattern.findall(time_str)
-    #     for match in matches_list:
-    #         return str(date.today().year) + '-' + match.replace(u'月', '-') \
-    #             .replace(u'日', '') + ":00"
-    #
-    #     pattern = re.compile(u'(\d{2}:\d{2})')
-    #     matches_list = pattern.findall(time_str)
-    #     for match in matches_list:
-    #         return str(date.today()) + ' ' + match + ":00"
-    #
-    #     pattern = re.compile(u'(\d{2})')
-    #     matches_list = pattern.findall(time_str)
-    #     for match in matches_list:
-    #         return str(
-    #             (datetime.now() - timedelta(minutes=int(match))).strftime(
-    #                 "%Y-%m-%d %H:%M:%S"))
