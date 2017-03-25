@@ -124,7 +124,7 @@ class QqPhotoSpider(CommonSpider):
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
                 status['publishTime'] = datetime.datetime.fromtimestamp(
-                    time_dict.get(key, 0)).strftime('%Y-%m-%d %H:%M:%S')
+                    time_dict.get(key, 0)).isoformat()
                 status['text'] = '' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}".format(status))

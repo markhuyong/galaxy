@@ -39,7 +39,7 @@ class QqStatusSpider(CommonSpider):
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time']).strftime('%Y-%m-%d %H:%M:%S')
+            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time']).isoformat()
             item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
             item['pictures'] = []
 
