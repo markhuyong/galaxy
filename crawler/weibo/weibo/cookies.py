@@ -31,14 +31,14 @@ logging.getLogger("selenium").setLevel(logging.WARNING)  # 将selenium的日志�
 """
 myWeiBo = [
     # ('13764512048', 'lebooks2016'),
-    # ('14523526312', '6xso0iu'),
-    # ('14523520983', '8ptsdvi'),
-    ('14523526653', '2jk8swi'),
-    ('14523526103', '1l9dgqf'),
+    ('14523526312', '6xso0iu'),
+    ('14523520983', '8ptsdvi'),
+    # ('14523526653', '2jk8swi'),
+    # ('14523526103', '1l9dgqf'),
 ]
 
 
-def getCookie_api(account, password):
+def getCookie(account, password):
     """ 获取一个账号的Cookie """
     loginURL = "https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.15)"
     username = base64.b64encode(account.encode("utf-8")).decode("utf-8")
@@ -73,7 +73,7 @@ def getCookie_api(account, password):
         return ""
 
 
-def getCookie(account, password):
+def getCookie_driver(account, password):
     """ 获取一个账号的Cookie """
     try:
         browser = webdriver.PhantomJS(desired_capabilities=dcap)
