@@ -5,7 +5,6 @@ import re
 import sys
 
 from scrapy import Request
-from scrapy import Selector
 
 from ..items import WeiboUserItem
 
@@ -28,7 +27,6 @@ class WeiboInfoSpider(CommonSpider):
         uid = kwargs.get('uid')  # nick_name
         if uid:
             self.nick_name = uid
-            # self.logger.debug("uid item = {}".format(unicode(uid)))
             self.start_urls = [BaseHelper.get_m_weibo_user_url(uid)]
 
     def make_requests_from_url(self, url):
