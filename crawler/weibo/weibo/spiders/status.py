@@ -5,7 +5,7 @@ import sys
 import re
 import urllib
 
-from dateutil.parser import parser
+from dateutil.parser import parse as date_parse
 from scrapy.http.cookies import CookieJar
 
 try:
@@ -94,7 +94,7 @@ class WeiboStatusSpider(CommonSpider):
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             item = WeiboStatusItem()
-            item['publishTime'] = card['mblog']['created_at']
+            item['publishTime'] = date_parse(card['mblog']['created_at']).isoformat()
 
             # parse text
             item['text'] = ''
