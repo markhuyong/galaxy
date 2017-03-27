@@ -93,7 +93,7 @@ class WeiboStatusSpider(CommonSpider):
             item = WeiboStatusItem()
             self.logger.debug("publishTime is {}".format(card['mblog']['created_at']))
             item['publishTime'] = date_parse(
-                card['mblog']['created_at']).isoformat()
+                card['mblog']['created_at'], fuzzy_with_tokens=True)[0].isoformat()
 
             # parse text
             item['text'] = ''
