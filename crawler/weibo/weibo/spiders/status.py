@@ -91,6 +91,7 @@ class WeiboStatusSpider(CommonSpider):
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             item = WeiboStatusItem()
+            self.logger.debug("publishTime is {}".format(card['mblog']['created_at']))
             item['publishTime'] = date_parse(
                 card['mblog']['created_at']).isoformat()
 
