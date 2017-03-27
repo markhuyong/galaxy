@@ -29,7 +29,7 @@ sys.setdefaultencoding('utf8')
 class WeiboStatusSpider(CommonSpider):
     name = "weibo_status"
     uid = 0
-    total_page = 3
+    total_page = 2000
     max_download_page = 3000
     containerid = 0
     done = False
