@@ -103,6 +103,7 @@ class WeiboStatusSpider(CommonSpider):
                 item['text'] = remove_tags(card['mblog']['text'])
 
             if 'retweeted_status' in card['mblog']:
+                self.logger.debug('retweeted_status ====={}'.format(card['mblog']['retweeted_status']['user']))
                 screen_name = card['mblog']['retweeted_status']['user'][
                     'screen_name']
                 text = remove_tags(card['mblog']['retweeted_status']['text'])

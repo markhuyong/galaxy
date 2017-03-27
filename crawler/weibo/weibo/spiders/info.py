@@ -37,11 +37,12 @@ class WeiboInfoSpider(CommonSpider):
         return Request(url, meta=meta, dont_filter=True)
 
     def parse(self, response):
-        location = response.headers.get('Location')
+        location = response.headers.get('Location', '')
         if not (location and '/u/' in location):
             ValueError("user isn't exist.")
         uid_matcher = re.findall(r'/u/(\d+)', location)
-        if not uid_matcher:
+        self.logger.debug("location={}, uid_matcher={}".format(location, uid_matcher))
+        if not len(uid_matcher) > 0:
             ValueError("uid parser error.")
         info_url = BaseHelper.get_m_weibo_user_info_url(uid_matcher[0])
         headers = BaseHelper.get_headers()
