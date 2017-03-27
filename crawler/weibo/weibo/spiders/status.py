@@ -104,11 +104,14 @@ class WeiboStatusSpider(CommonSpider):
 
             if 'retweeted_status' in card['mblog']:
                 self.logger.debug('retweeted_status ====={}'.format(card['mblog']['retweeted_status']))
-                screen_name = card['mblog']['retweeted_status']['user'][
-                    'screen_name']
+                user = card['mblog']['retweeted_status'].get('user')
+                if user:
+                    screen_name = card['mblog']['retweeted_status']['user'][
+                        'screen_name']
+                    item['text'] += "@{}".format(screen_name)
+
                 text = remove_tags(card['mblog']['retweeted_status']['text'])
-                retweeted = "@{}{}".format(screen_name, text)
-                item['text'] += retweeted.replace(u"...全文", '')
+                item['text'] += text.replace(u"...全文", '')
 
             # parse pics
             item['pictures'] = []
