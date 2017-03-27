@@ -4,6 +4,7 @@ import sys
 import json
 from scrapy.http.request import Request
 from datetime import datetime
+from dateutil.tz import tzlocal
 from ..items import QqStatusItem
 
 from ..utils import CommonSpider
@@ -39,7 +40,7 @@ class QqStatusSpider(CommonSpider):
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time']).isoformat()
+            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time'], tzlocal()).isoformat()
             item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
             item['pictures'] = []
 

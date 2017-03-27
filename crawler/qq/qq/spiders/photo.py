@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-
-import logging
-
-import datetime
-from scrapy.http.request import Request
 import json
+import datetime
+from dateutil.tz import tzlocal
+from scrapy.http.request import Request
 
 from crawler.qq.qq.items import PictureItem, QqStatusItem
 
@@ -124,7 +122,7 @@ class QqPhotoSpider(CommonSpider):
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
                 status['publishTime'] = datetime.datetime.fromtimestamp(
-                    time_dict.get(key, 0)).isoformat()
+                    time_dict.get(key, 0), tzlocal()).isoformat()
                 status['text'] = '' if key == 'extra' else key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}".format(status))
