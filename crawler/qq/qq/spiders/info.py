@@ -31,17 +31,28 @@ class QqInfoSpider(CommonSpider):
             self.start_urls = [BaseHelper.get_profile_url(uid)]
 
     def parse(self, response):
-        matcher = re.findall(self.COUNT_REGEXP, str(response.body))
+        body_str = str(response.body)
+        matcher = re.findall(self.PROFILE_REGEXP, body_str)
+        item = QQProfileItem()
         if matcher:
             s = str(matcher.pop())
-            logger.debug("the matcher string is {}".format(s))
+            logger.debug("the PROFILE_REGEXP matcher string is {}".format(s))
+            prefix = "\"profile\":"
+            s = s[len(prefix):len(s)]
+            json_obj = json.loads(s)
+            item['nickname'] = json_obj['nickname']
+
+        matcher = re.findall(self.COUNT_REGEXP, body_str)
+        if matcher:
+            s = str(matcher.pop())
+            logger.debug("the COUNT_REGEXP matcher string is {}".format(s))
             prefix = "\"count\":"
             s = s[len(prefix):len(s)]
             json_obj = json.loads(s)
-            item = QQProfileItem()
+
             item['blog'] = json_obj['blog']
             item['message'] = json_obj['message']
             item['pic'] = json_obj['pic']
             item['shuoshuo'] = json_obj['shuoshuo']
-            logger.debug("json item = {}".format(item))
-            yield item
+        logger.debug("json item = {}".format(item))
+        yield item

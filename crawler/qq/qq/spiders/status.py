@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import logging
-from scrapy.http.request import Request
 import json
+from scrapy.http.request import Request
+from datetime import datetime
+from dateutil.tz import tzlocal
 from ..items import QqStatusItem
 
 from ..utils import CommonSpider
@@ -11,8 +12,6 @@ from ..utils import BaseHelper
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-logger = logging.getLogger(__name__)
 
 
 class QqStatusSpider(CommonSpider):
@@ -22,29 +21,28 @@ class QqStatusSpider(CommonSpider):
         super(CommonSpider, self).__init__(*args, **kwargs)
 
         uid = kwargs.get('uid')
-        # uid = 646055372
         if uid:
-            logger.debug("uid = {}".format(uid))
+            self.logger.debug("uid = {}".format(uid))
             self.start_urls = [BaseHelper.get_shuoshuo_url(uid)]
 
     def parse(self, response):
         body = json.loads(response.body)
 
-        logger.debug("body======={}".format(body))
+        self.logger.debug("body======={}".format(body))
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+        if 'vFeeds' not in body['data']:
+            raise ValueError("user have no shuoshuo.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
-        if remain_count > 0:
-            next_page = BaseHelper.get_shuoshuo_url(self.uid, last_attach)
-            yield Request(next_page)
 
         # get user text and photos
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
-            item['publishTime'] = feed['comm']['time']
-            item['text'] = feed['operation']['share_info']['summary']
+            item['publishTime'] = datetime.fromtimestamp(feed['comm']['time'], tzlocal()).isoformat()
+            item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
+            item['pictures'] = []
 
             # get photo urls
             if 'pic' in feed:
@@ -71,7 +69,12 @@ class QqStatusSpider(CommonSpider):
                             "height": height
                         }]
 
-                        item['pictures'] = pictures
+                item['pictures'] = pictures
 
-            logger.debug("item*======={}", item)
-            yield item
+            self.logger.debug("item*======={}".format(item))
+            if item['pictures'] or item['text']:
+                yield item
+
+        if remain_count > 0:
+            next_page = BaseHelper.get_shuoshuo_url(self.uid, last_attach)
+            yield Request(next_page)

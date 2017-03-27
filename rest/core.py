@@ -239,7 +239,8 @@ class CrawlManager(object):
             if failure.type is ValueError:
                 fail_data = failure.value.message
             else:
-                fail_data = failure.getTraceback()
+                # fail_data = failure.getTraceback()
+                fail_data = failure.getErrorMessage()
             self.errors.append(fail_data)
 
     def get_item(self, item, response, spider):

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import base64
-import os
-import requests
 import json
 import logging
 
@@ -10,6 +7,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+import qqlib
+
+from crawler.qq.qq.utils import BaseHelper
 
 logger = logging.getLogger(__name__)
 
@@ -19,16 +20,22 @@ logger = logging.getLogger(__name__)
 """
 my_qq = [
     # ('1544269229', '1rwi4o8d'),
-    ('914095005', 'mike110_110'),
+    ('3246800755', 'huhongle79'),
 ]
 
 
-def getCookie(account, password):
+def getCookie_driver(account, password):
     """ 获取一个账号的Cookie """
 
+    USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
     login_page = "http://ui.ptlogin2.qq.com/cgi-bin/login?style=9&pt_ttype=1&appid=549000929&pt_no_auth=1&pt_wxtest=1&daid=5&s_url=https%3A%2F%2Fh5.qzone.qq.com%2Fmqzone%2Findex"
 
-    driver = webdriver.PhantomJS()
+    cap = webdriver.DesiredCapabilities.PHANTOMJS
+    cap["phantomjs.page.settings.resourceTimeout"] = 5000
+    cap["phantomjs.page.settings.loadImages"] = False
+    cap["phantomjs.page.settings.userAgent"] = USER_AGENT
+
+    driver = webdriver.PhantomJS(desired_capabilities=cap)
     # driver.delete_all_cookies()
     driver.get(login_page)
 
@@ -61,51 +68,59 @@ def getCookie(account, password):
     logger.warning("Get Cookie Success!( Account:%s )" % account)
     return json.dumps(cookies)
 
-    # if info["retcode"] == "0":
-    #     logger.warning("Get Cookie Success!( Account:%s )" % account)
-    #     cookie = session.cookies.get_dict()
-    #     return json.dumps(cookie)
-    # else:
-    #     logger.warning("Failed!( Reason:%s )" % info["reason"])
-    #     return ""
+def getCookie(account, password):
+    """ 获取一个账号的Cookie """
+    qq = qqlib.QQ(account, password)
+    qq.login()
+    cookies = qq.session.cookies
+    if "pt4_token" in cookies:
+        logger.warning("Get Cookie Success!( Account:%s )" % account)
+        cookie = cookies.get_dict()
+        return json.dumps(cookie)
+    else:
+        logger.warning("Failed!( Reason:%s )" % "pt4_token does not exist.")
+        return ""
 
-
-def initCookie(rconn, spiderName):
+def initCookie(rconn, spider):
     """ 获取所有账号的Cookies，存入Redis。如果Redis已有该账号的Cookie，则不再获取。 """
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
     for qq in my_qq:
-        if rconn.get("%s:Cookies:%s--%s" % (spiderName, qq[0], qq[1])) \
+        if rconn.get("%s:Cookies:%s--%s" % ("qq", qq[0], qq[1])) \
                 is None:  # 'qq:Cookies:账号--密码'，为None即不存在。
             cookie = getCookie(qq[0], qq[1])
+            spider.log("qq cookies" + "=" * 10 + cookie)
             if len(cookie) > 0:
                 rconn.set(
-                    "%s:Cookies:%s--%s" % (spiderName, qq[0], qq[1]),
+                    "%s:%s--%s" % (prefix, qq[0], qq[1]),
                     cookie)
-    cookieNum = "".join(rconn.keys()).count("qq:Cookies")
+    cookieNum = len(rconn.keys("{}:*".format(prefix)))
     logger.warning("The num of the cookies is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')
         # os.system("pause")
 
 
-def updateCookie(accountText, rconn, spiderName):
+def updateCookie(accountText, rconn, spider):
     """ 更新一个账号的Cookie """
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
     account = accountText.split("--")[0]
     password = accountText.split("--")[1]
     cookie = getCookie(account, password)
     if len(cookie) > 0:
         logger.warning(
             "The cookie of %s has been updated successfully!" % account)
-        rconn.set("%s:Cookies:%s" % (spiderName, accountText), cookie)
+        rconn.set("%s:%s" % (prefix, accountText), cookie)
     else:
         logger.warning(
             "The cookie of %s updated failed! Remove it!" % accountText)
-        removeCookie(accountText, rconn, spiderName)
+        removeCookie(accountText, rconn, spider)
 
 
-def removeCookie(accountText, rconn, spiderName):
+def removeCookie(accountText, rconn, spider):
     """ 删除某个账号的Cookie """
-    rconn.delete("%s:Cookies:%s" % (spiderName, accountText))
-    cookieNum = "".join(rconn.keys()).count("qq:Cookies")
+    prefix = BaseHelper.get_cookie_key_prefix(spider)
+    rconn.delete("%s:%s" % (prefix, accountText))
+    cookieNum = len(rconn.keys("{}:*".format(prefix)))
     logger.warning("The num of the cookies left is %s" % cookieNum)
     if cookieNum == 0:
         logger.warning('Stopping...')

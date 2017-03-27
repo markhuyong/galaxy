@@ -9,6 +9,8 @@ from scrapy.exceptions import IgnoreRequest
 from scrapy.utils.response import response_status_message
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
 
+from crawler.weibo.weibo.utils import BaseHelper
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,20 +24,24 @@ class CookiesMiddleware(RetryMiddleware):
             crawler.settings.get('REDIS_PORT', 6379),
             crawler.settings.get('REDIS_DB', 0),
             crawler.settings.get('REDIS_PASS', None)))
-        initCookie(self.rconn, crawler.spider.name)
+        initCookie(self.rconn, crawler.spider)
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(crawler.settings, crawler)
 
     def process_request(self, request, spider):
-        redisKeys = self.rconn.keys()
+        prefix = BaseHelper.get_cookie_key_prefix(spider)
+        redisKeys = self.rconn.keys("{}:*".format(prefix))
         while len(redisKeys) > 0:
             elem = random.choice(redisKeys)
-            if "weibo:Cookies" in elem:
+            if prefix in elem:
                 cookie = json.loads(self.rconn.get(elem))
+                if request.cookies:
+                    cookie.update(request.cookies)
                 request.cookies = cookie
-                request.meta["accountText"] = elem.split("Cookies:")[-1]
+                # request.cookies = request.cookies.update(cookie) if isinstance(request.cookies, dict) else cookie
+                request.meta["accountText"] = elem.split(prefix)[-1]
                 break
             else:
                 redisKeys.remove(elem)

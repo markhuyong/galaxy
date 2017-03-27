@@ -75,7 +75,7 @@ class ServiceResource(resource.Resource, object):
 
     def format_error_response(self, exception, request):
         return {
-            "success": "false",
+            "success": False,
             "message": str(exception),
             "code": request.code
         }
@@ -260,20 +260,20 @@ class CrawlResource(ServiceResource):
         response = {}
         spider_name = result.get("spider_name")
         if not spider_name:
-            response["success"] = "false"
+            response["success"] = False
             response["message"] = "spider_name is missing!"
             return response
 
         errors = result.get("errors")
         if errors:
-            response["success"] = "false"
-            response["message"] = str(errors)
+            response["success"] = False
+            response["message"] = str(errors[0])
             return response
 
         items_dropped = result.get("items_dropped")
         if items_dropped:
-            response["success"] = "false"
-            response["message"] = str(items_dropped)
+            response["success"] = False
+            response["message"] = str(items_dropped[0])
             return response
 
         info_spiders = ["jianshu_lectures", "qq_info", "weibo_info"]
@@ -282,12 +282,13 @@ class CrawlResource(ServiceResource):
             items = result.get("items")
             if not items:
                 response = {
-                    "success": "false",
+                    "success": False,
                     "message": "the result is empty.",
                 }
+                return response
 
             response = {
-                "success": "true",
+                "success": True,
 
             }
             response.update(items[0])
@@ -295,7 +296,7 @@ class CrawlResource(ServiceResource):
         else:
             items = result.get("items")
             response = {
-                "success": "true",
+                "success": True,
                 "items": items,
             }
             return response

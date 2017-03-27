@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-
-import logging
-
-from scrapy.exceptions import CloseSpider
-from scrapy.http.request import Request
 import json
+import datetime
+from dateutil.tz import tzlocal
+from scrapy.http.request import Request
 
 from crawler.qq.qq.items import PictureItem, QqStatusItem
 
@@ -15,8 +13,6 @@ from ..utils import BaseHelper
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-logger = logging.getLogger(__name__)
 
 
 class QqPhotoSpider(CommonSpider):
@@ -29,28 +25,37 @@ class QqPhotoSpider(CommonSpider):
 
         uid = kwargs.get('uid')
         if uid:
-            logger.debug("uid item = {}".format(uid))
+            self.logger.debug("uid item = {}".format(uid))
             self.uid = uid
             self.start_urls = [BaseHelper.get_album_url(uid)]
 
     def parse(self, response):
+        self.logger.debug("{} {}".format("=" * 10, str(response.body)))
         try:
             body = json.loads(response.body)
         except ValueError, e:
             pass
 
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+
+        if 'vFeeds' not in body['data']:
+            raise ValueError("user have no albums.")
 
         last_attach = body['data']['attach_info']
         remain_count = body['data']['remain_count']
 
         for feed in body['data']['vFeeds']:
-            if 'pic' in feed and not "说说和日志相册" == feed['pic']['albumname']:
+            def is_valid():
+                skip = "说说和日志相册" == feed['pic']['albumname'] or feed['pic'][
+                                                                    'allow_access'] == 0
+                return 'pic' in feed and not skip
+
+            if is_valid():
                 album_id = feed['pic']['albumid']
                 photo_num = feed['pic']['albumnum']
 
-                fetch_len = photo_num // self.fetch_size
+                fetch_len = photo_num // self.fetch_size + 1
                 last_fetch_size = photo_num % self.fetch_size
                 for n in xrange(0, fetch_len):
                     already_fetch_num = n * self.fetch_size
@@ -63,9 +68,9 @@ class QqPhotoSpider(CommonSpider):
                                                          last_attach_temp)
                     yield Request(photo_url, self.parse_photo)
 
-                if remain_count > 0:
-                    next_page = BaseHelper.get_album_url(self.uid, last_attach)
-                    yield Request(next_page)
+        if remain_count > 0:
+            next_page = BaseHelper.get_album_url(self.uid, last_attach)
+            yield Request(next_page)
 
     def parse_photo(self, response):
 
@@ -75,7 +80,10 @@ class QqPhotoSpider(CommonSpider):
             pass
 
         if body['code'] != 0:
-            raise ValueError("have no photos or your have no right to access.")
+            raise ValueError(body['message'])
+
+        if 'photos' not in body['data']:
+            raise ValueError("album have no photos.")
 
         photos_dict = body['data']['photos']
         for photos_key in body['data']['photos']:
@@ -86,7 +94,6 @@ class QqPhotoSpider(CommonSpider):
 
             photo_dict = photos_dict[photos_key]
             for photo in photo_dict:
-                print photo
                 desc = photo['desc']
                 pic = PictureItem()
                 pic['url'] = photo['1']['url']
@@ -108,15 +115,16 @@ class QqPhotoSpider(CommonSpider):
                         else:
                             image_dict[ext_key] += [pic]
                     else:
-                        # ext_key += " "
                         image_dict[ext_key] += [pic]
                         time_dict[ext_key] = photo['uUploadTime']
                 pre_time = photo['uUploadTime']
 
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
-                status['publishTime'] = time_dict.get(key, 0) * 1000
-                status['text'] = ' ' if key == 'extra' else key.strip()
+                status['publishTime'] = datetime.datetime.fromtimestamp(
+                    time_dict.get(key, 0), tzlocal()).isoformat()
+                status['text'] = '' if key == 'extra' else key.strip()
                 status['pictures'] = value
-                logger.debug("status*======={}", status)
-                yield status
+                self.logger.debug("status*======={}".format(status))
+                if status['pictures'] or status['text']:
+                    yield status

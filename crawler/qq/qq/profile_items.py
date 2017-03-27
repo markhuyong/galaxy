@@ -15,6 +15,7 @@ class ProfileItem(Item):
 
 
 class QQProfileItem(ProfileItem):
+    nickname = Field()
     blog = Field()
     message = Field()
     pic = Field()

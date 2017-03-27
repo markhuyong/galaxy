@@ -40,14 +40,12 @@ class LectureSpider(CommonSpider):
         item['authorName'] = titles[0]
         item['url'] = response.request.url
 
-        next_link = BaseHelper.LECTURES_URL.format(uid=uid)
+        next_link = BaseHelper.get_lectures_url(uid)
         request = Request(next_link, callback=self.parse_lecture_json,
                           headers=headers)
         cookie_jar.add_cookie_header(request)  # apply Set-Cookie ourselves
         request.meta['item'] = item
         yield request
-
-        yield item
 
     def parse_lecture_json(self, response):
         body = json.loads(response.body)
@@ -57,7 +55,7 @@ class LectureSpider(CommonSpider):
 
         for record in body['notebooks']:
             lecture = self._get_partial_lecture(record, item['authorName'])
-            yield self._get_parse_article_number_request(lecture, 'lecture')
+            lecture['articleNumber'] = self._get_parse_article_number_request(lecture)
             collection += [lecture]
 
         item['lectures'] = collection
@@ -66,10 +64,12 @@ class LectureSpider(CommonSpider):
         for record in body['own_collections']:
             lecture = self._get_partial_lecture(record, item['authorName'],
                                                 isSpecial=True)
-            yield self._get_parse_article_number_request(lecture, 'lecture')
+            lecture['articleNumber'] = self._get_parse_article_number_request(lecture)
             collection += [lecture]
 
         item['specials'] = collection
+
+        yield item
 
     def parse_article_number(self, response):
         lecture = response.request.meta['lecture']
@@ -90,12 +90,16 @@ class LectureSpider(CommonSpider):
         lecture = dict()
         lecture['authorName'] = author_name
         lecture['name'] = record[title_key]
-        lecture['url'] = "{base}/{infix}/{id}".format(base=BaseHelper.BASE_URL,
+        lecture['url'] = "{base}/{infix}/{id}".format(base=BaseHelper.BASE,
                                                       infix=link_infix,
                                                       id=record[link_suffix])
         return lecture
 
-    def _get_parse_article_number_request(self, record, key):
-        request = Request(record['url'], callback=self.parse_article_number)
-        request.meta[key] = record
-        return request
+    def _get_parse_article_number_request(self, record):
+        import requests
+        req = requests.Request('GET', record['url'])
+        r = req.prepare()
+        s = requests.Session()
+        response = s.send(r)
+        numbers = Selector(response).css('div.info::text').re(ur'([0-9]+)') or [0]
+        return numbers[0]
