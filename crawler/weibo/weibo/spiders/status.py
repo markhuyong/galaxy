@@ -122,10 +122,24 @@ class WeiboStatusSpider(CommonSpider):
             else:
                 pics = card['mblog'].get('pics') or []
             for pic in pics:
-                p = {"url": pic['large']['url'],
-                     "width": pic['large']['geo']['width'],
-                     "height": pic['large']['geo']['height']
-                     }
+                geo = pic['large']['geo']
+                if geo:
+                    p = {"url": pic['large']['url'],
+                         "width": pic['large']['geo']['width'],
+                         "height": pic['large']['geo']['height']
+                         }
+                else:
+                    size = pic['large']['size']
+                    if size == "large":
+                        p = {"url": pic['large']['url'],
+                             "width": 360,
+                             "height": 360
+                             }
+                    else:
+                        p = {"url": pic['large']['url'],
+                             "width": 180,
+                             "height": 180
+                             }
                 item['pictures'] += [p]
             yield item
 
