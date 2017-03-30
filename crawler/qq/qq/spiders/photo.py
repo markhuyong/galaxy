@@ -88,7 +88,7 @@ class QqPhotoSpider(CommonSpider):
         photos_dict = body['data']['photos']
         for photos_key in body['data']['photos']:
             image_dict = {}
-            ext_key = 'extra'
+            ext_key = ''
             pre_time = 0L
             time_dict = {}
 
@@ -108,22 +108,23 @@ class QqPhotoSpider(CommonSpider):
                         image_dict[desc] += [pic]
                 else:
                     cur_time = photo['uUploadTime']
-                    if abs(cur_time - pre_time) >= 2:
+                    if abs(cur_time - pre_time) <= 2:
                         if ext_key not in image_dict:
                             image_dict[ext_key] = [pic]
                             time_dict[ext_key] = photo['uUploadTime']
                         else:
                             image_dict[ext_key] += [pic]
                     else:
-                        image_dict[ext_key] += [pic]
+                        ext_key += ' '
+                        image_dict[ext_key] = [pic]
                         time_dict[ext_key] = photo['uUploadTime']
-                pre_time = photo['uUploadTime']
+                    pre_time = photo['uUploadTime']
 
             for key, value in image_dict.iteritems():
                 status = QqStatusItem()
                 status['publishTime'] = datetime.datetime.fromtimestamp(
                     time_dict.get(key, 0), tzlocal()).isoformat()
-                status['text'] = '' if key == 'extra' else key.strip()
+                status['text'] = key.strip()
                 status['pictures'] = value
                 self.logger.debug("status*======={}".format(status))
                 if status['pictures'] or status['text']:
