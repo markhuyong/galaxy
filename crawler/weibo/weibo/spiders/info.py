@@ -8,7 +8,7 @@ from scrapy import Request
 
 from ..items import WeiboUserItem
 
-from ..utils import CommonSpider
+from crawler.misc.spider import CommonSpider
 from ..utils import BaseHelper
 
 logger = logging.getLogger(__name__)
