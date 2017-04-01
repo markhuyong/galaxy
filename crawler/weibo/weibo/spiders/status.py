@@ -18,10 +18,9 @@ except ImportError:
 from w3lib.html import remove_tags
 
 from scrapy import Request
-
+from crawler.misc.spider import CommonSpider
 from ..items import WeiboStatusItem
 
-from ..utils import CommonSpider
 from ..utils import BaseHelper
 
 reload(sys)
