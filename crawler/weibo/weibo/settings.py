@@ -7,8 +7,9 @@ NEWSPIDER_MODULE = 'weibo.spiders'
 
 DOWNLOADER_MIDDLEWARES = {
     # Engine side
-    # 'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
-    'weibo.middleware.CookiesMiddleware': 402,
+    'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 441,
+    'crawler.misc.middleware.proxy.CustomHttpProxyFromRedisMiddleware': 443,
+    'weibo.middleware.CookiesMiddleware': 445,
     # Downloader side
 }
 
@@ -35,10 +36,18 @@ COOKIES_DEBUG = True
 
 LOG_ENABLED = True
 LOG_STDOUT = True
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 
 ROBOTSTXT_OBEY = False
 
+
+CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # DOWNLOAD_DELAY = 0.25
-DOWNLOAD_DELAY = 1.5
+# DOWNLOAD_DELAY = 1.5
 # DOWNLOAD_TIMEOUT = 360
+
+# Retry when proxies fail
+RETRY_TIMES = 3
+
+# Retry on most error codes since proxies fail for different reasons
+RETRY_HTTP_CODES = [500, 502, 503, 504, 400, 403, 404, 408]

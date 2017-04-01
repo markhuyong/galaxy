@@ -7,3 +7,4 @@ demjson
 selenium
 qqlib
 python-dateutil
+txsocksx

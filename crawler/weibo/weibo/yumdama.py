@@ -11,16 +11,16 @@ import httplib, mimetypes, urlparse, json, time
 # 3. 使用添加的软件ID和密钥进行开发，享受丰厚分成
 
 # 用户名
-username = 'XXXXXX'
+username = 'markhuyong'
 
 # 密码
-password = 'XXXXXX'
+password = 'U1lvDnMNZXyy'
 
 # 软件ＩＤ，开发者分成必要参数。登录开发者后台【我的软件】获得！
-appid = 1
+appid = 3303
 
 # 软件密钥，开发者分成必要参数。登录开发者后台【我的软件】获得！
-appkey = 'XXXXXX'
+appkey = '1cd64f9e9514ac8f030c7ae7f71ec8a2'
 
 # 图片文件
 filename = 'ab.png'

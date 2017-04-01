@@ -32,21 +32,21 @@ class TestWeiboStatusOffline(TestCase):
 
     def test__parse_weibo_status_published_at(self):
         stand_time = u'2013-05-28 10:48:13 [来自微博 weibo.com]'
-        stand_parser = self.spider._parse_weibo_published_at(stand_time)
+        stand_parser = self.spider._parse_publish_time(stand_time)
         self.assertEqual(stand_parser, u'2013-05-28 10:48:13')
 
         chinese_short_time = u'6月14日 12:11 [来自微博 weibo.com]'
-        chinese_short_parser = self.spider._parse_weibo_published_at(
+        chinese_short_parser = self.spider._parse_publish_time(
             chinese_short_time)
         self.assertEqual(chinese_short_parser,
                          str(date.today().year) + u'-6-14 12:11')
 
         today_time = u'今天 16:00 [来自微博 weibo.com]'
-        today_parser = self.spider._parse_weibo_published_at(today_time)
+        today_parser = self.spider._parse_publish_time(today_time)
         self.assertEqual(today_parser, str(date.today()) + u' 16:00')
 
         minus_before_time = u'27分钟前 [来自微博 weibo.com]'
-        minus_before_parser = self.spider._parse_weibo_published_at(
+        minus_before_parser = self.spider._parse_publish_time(
             minus_before_time)
         self.assertEqual(minus_before_parser, str(
             (datetime.now() - timedelta(minutes=27)).strftime(

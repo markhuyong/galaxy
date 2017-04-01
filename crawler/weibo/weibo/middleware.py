@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import random
-import redis
 import json
-import logging
-from cookies import initCookie, updateCookie, removeCookie
+import random
+
+import redis
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
 from scrapy.exceptions import IgnoreRequest
 from scrapy.utils.response import response_status_message
-from scrapy.downloadermiddlewares.retry import RetryMiddleware
 
+from cookies import initCookie, updateCookie, removeCookie
 from crawler.weibo.weibo.utils import BaseHelper
-
-logger = logging.getLogger(__name__)
 
 
 class CookiesMiddleware(RetryMiddleware):
@@ -33,33 +31,39 @@ class CookiesMiddleware(RetryMiddleware):
     def process_request(self, request, spider):
         prefix = BaseHelper.get_cookie_key_prefix(spider)
         redisKeys = self.rconn.keys("{}:*".format(prefix))
-        while len(redisKeys) > 0:
-            elem = random.choice(redisKeys)
-            if prefix in elem:
-                cookie = json.loads(self.rconn.get(elem))
-                if request.cookies:
-                    cookie.update(request.cookies)
-                request.cookies = cookie
-                # request.cookies = request.cookies.update(cookie) if isinstance(request.cookies, dict) else cookie
-                request.meta["accountText"] = elem.split(prefix)[-1]
-                break
-            else:
-                redisKeys.remove(elem)
+
+        if not redisKeys:
+            return
+        used_keys = self.rconn.smembers("cycle:{}".format(prefix))
+        rand_keys = list(set(redisKeys) - used_keys)
+
+        if not rand_keys:
+            rand_keys = redisKeys
+            self.rconn.delete("cycle:{}".format(prefix))
+
+        elem = random.choice(rand_keys)
+        cookie = json.loads(self.rconn.get(elem))
+        if request.cookies:
+            extra = request.cookies
+            cookie.update(extra)
+        request.cookies = cookie
+        request.meta["accountText"] = elem.split(prefix)[-1]
+        self.rconn.sadd("cycle:{}".format(prefix), elem)
 
     def process_response(self, request, response, spider):
         if response.status in [300, 301, 302, 303]:
             try:
                 redirect_url = response.headers["location"]
                 if "login.weibo" in redirect_url or "login.sina" in redirect_url:  # Cookie失效
-                    logger.warning("One Cookie need to be updating...")
+                    spider.logger.warning("One Cookie need to be updating...")
                     updateCookie(request.meta['accountText'], self.rconn,
                                  spider.name)
                 elif "weibo.cn/security" in redirect_url:  # 账号被限
-                    logger.warning("One Account is locked! Remove it!")
+                    spider.logger.warning("One Account is locked! Remove it!")
                     removeCookie(request.meta["accountText"], self.rconn,
                                  spider.name)
                 elif "weibo.cn/pub" in redirect_url:
-                    logger.warning(
+                    spider.logger.warning(
                         "Redirect to 'http://weibo.cn/pub'!( Account:%s )" %
                         request.meta["accountText"].split("--")[0])
                 reason = response_status_message(response.status)
@@ -67,7 +71,6 @@ class CookiesMiddleware(RetryMiddleware):
             except Exception, e:
                 raise IgnoreRequest
         elif response.status in [403, 414]:
-            logger.error("%s! Stopping..." % response.status)
-            print("%s! Stopping..." % response.status)
+            spider.logger.error("%s! Stopping..." % response.status)
         else:
             return response

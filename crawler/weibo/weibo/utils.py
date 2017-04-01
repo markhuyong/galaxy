@@ -5,8 +5,7 @@ import sys
 
 from scrapy.http.headers import Headers
 
-from crawler.misc.spider import CommonSpider
-from crawler.misc import agents
+from crawler.misc import mobile_agents
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -31,6 +30,37 @@ class BaseHelper(object):
         })
 
     @classmethod
+    def get_login_headers(cls):
+        return {
+            # 'User-Agent': cls._get_user_agent(),
+            # 'User-Agent': "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
+            "Pragma": "no-cache",
+            "Origin": "https://passport.weibo.cn",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.8,zh;q=0.6",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "*/*",
+            "Referer": "https://passport.weibo.cn/signin/login?entry=mweibo&res=wel&wm=3349&r=http%3A%2F%2Fm.weibo.cn%2F",
+            "Connection": "keep-alive",
+        }
+
+    @classmethod
+    def get_status_headers(cls, uid):
+        return Headers({
+            'Accept-Encoding': 'gzip, deflate, sdch',
+            'Accept-Language': 'en-US,en;q=0.8,zh;q=0.6',
+            'Accept': 'application/json, text/plain, */*',
+            'Host': 'm.weibo.cn',
+            'Referer': cls.get_m_weibo_home_url(uid),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Connection': 'keep-alive',
+        })
+
+    @staticmethod
+    def random_user_agent():
+        return str(random.choice(mobile_agents.AGENTS))
+
+    @classmethod
     def get_common_page_url(cls, nick_name):
         # encode = nick_name.encode('utf-8') if not isinstance(nick_name, unicode) else nick_name
 
@@ -53,6 +83,7 @@ class BaseHelper(object):
     @classmethod
     def get_m_weibo_home_url(cls, uid):
         return cls.M_WEIBO_HOME_URL.format(uid=uid)
+
     @classmethod
     def get_m_weibo_user_url(cls, nick_name):
         return cls.M_WEIBO_USER_URL.format(nick_name=nick_name)

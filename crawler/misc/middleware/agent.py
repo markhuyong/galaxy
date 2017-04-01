@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..agents import AGENTS
+from ..mobile_agents import AGENTS
 
 import random
 

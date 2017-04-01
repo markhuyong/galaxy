@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import json
-import sys
 import re
+import sys
 import urllib
+from datetime import date, datetime, timedelta
 
 from dateutil.parser import parse as date_parse
 from scrapy.http.cookies import CookieJar
+from scrapy.xlib.tx import ResponseFailed
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -29,7 +31,7 @@ sys.setdefaultencoding('utf8')
 class WeiboStatusSpider(CommonSpider):
     name = "weibo_status"
     uid = 0
-    total_page = 2000
+    total_page = 200
     max_download_page = 3000
     containerid = 0
     done = False
@@ -49,7 +51,7 @@ class WeiboStatusSpider(CommonSpider):
 
         cookie_jar = response.meta.setdefault('cookiejar', CookieJar())
         cookie_jar.extract_cookies(response, response.request)
-        cookies_str = str(response.headers['Set-Cookie'])
+        cookies_str = str(response.headers.get('Set-Cookie'))
         if 'M_WEIBOCN_PARAMS' not in cookies_str:
             ValueError("parse cookie encounter error.")
         matches = re.findall(u'[^l]fid=(\d+)', urllib.unquote(cookies_str))
@@ -58,11 +60,12 @@ class WeiboStatusSpider(CommonSpider):
         fid = matches[0]
         first_url = BaseHelper.get_m_weibo_status_url(self.uid,
                                                       fid)
-
-        headers = BaseHelper.get_headers()
+        temp = cookie_jar._cookies.get('.weibo.cn', {}).get('/')
+        cookies = {c.name: c.value for c in temp.values()}
+        headers = BaseHelper.get_status_headers(self.uid)
         request = Request(first_url,
                           headers=headers,
-                          cookies=cookie_jar._cookies,
+                          cookies=cookies,
                           callback=self.parse_weibo_containerid)
         cookie_jar.add_cookie_header(request)  # apply Set-Cookie ourselves
         request.meta['cookiejar'] = response.meta['cookiejar']
@@ -78,7 +81,7 @@ class WeiboStatusSpider(CommonSpider):
 
         first_url = BaseHelper.get_m_weibo_status_url(self.uid,
                                                       self.containerid)
-        headers = BaseHelper.get_headers()
+        headers = BaseHelper.get_status_headers(self.uid)
         request = Request(first_url,
                           headers=headers,
                           callback=self.parse_weibo)
@@ -86,14 +89,18 @@ class WeiboStatusSpider(CommonSpider):
         yield request
 
     def parse_weibo(self, response):
+        try:
+            body = json.loads(response.body)
+        except ValueError:
+            raise ResponseFailed("Respone is not json format.")
 
-        body = json.loads(response.body)
+        self.logger.debug("body======{}".format(body))
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             item = WeiboStatusItem()
             self.logger.debug("publishTime is {}".format(card['mblog']['created_at']))
             item['publishTime'] = date_parse(
-                card['mblog']['created_at'], fuzzy_with_tokens=True)[0].isoformat()
+                self._parse_publish_time(card['mblog']['created_at']), fuzzy_with_tokens=True)[0].isoformat()
 
             # parse text
             item['text'] = ''
@@ -153,9 +160,34 @@ class WeiboStatusSpider(CommonSpider):
                 next_page_url = BaseHelper.get_m_weibo_status_url(self.uid,
                                                                   self.containerid,
                                                                   next_page)
-                headers = BaseHelper.get_headers()
+                headers = BaseHelper.get_status_headers(self.uid)
                 request = Request(next_page_url,
                                   headers=headers,
                                   callback=self.parse_weibo)
                 request.meta['cookiejar'] = response.meta['cookiejar']
                 yield request
+
+    def _parse_publish_time(self, time_str):
+        pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
+        matches_list = pattern.findall(time_str)
+        for match in matches_list:
+            return match
+
+        pattern = re.compile(u'(\d{1,2}月\d{1,2}日 \d{1,2}:\d{1,2})')
+        matches_list = pattern.findall(time_str)
+        for match in matches_list:
+            return str(date.today().year) + '-' + match.replace(u'月', '-') \
+                .replace(u'日', '')
+
+        pattern = re.compile(u'今天 (\d{1,2}:\d{1,2})')
+        matches_list = pattern.findall(time_str)
+        for match in matches_list:
+            return str(date.today()) + ' ' + match
+
+        pattern = re.compile(u'(\d{1,2})分钟前')
+        matches_list = pattern.findall(time_str)
+        for match in matches_list:
+            return str(
+                (datetime.now() - timedelta(minutes=int(match))).strftime(
+                    "%Y-%m-%d %H:%M:%S"))
+        return time_str
