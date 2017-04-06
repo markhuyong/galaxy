@@ -295,8 +295,9 @@ def getCookie(account, password, spider):
     dcap["phantomjs.page.settings.userAgent"] = BaseHelper.random_user_agent()
     try:
         browser = webdriver.PhantomJS(desired_capabilities=dcap)
+        browser.set_window_size(480, 320)
         browser.get("https://weibo.cn/login/")
-        time.sleep(1)
+        time.sleep(3)
         import os
         try:
             os.remove("aa.png")
