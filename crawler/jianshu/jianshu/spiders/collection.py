@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import json
-from dateutil import parser
+import re
+import sys
+import urlparse
 
 from scrapy import Selector
 from scrapy.http.cookies import CookieJar
-
 from scrapy.http.request import Request
 
 from ..items import CollectionItem
-from ..utils import CommonSpider
 from ..utils import BaseHelper
+from ..utils import CommonSpider
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 class CollectionSpider(CommonSpider):
@@ -60,7 +64,6 @@ class CollectionSpider(CommonSpider):
 
     def parse_collection(self, response):
         rows = json.loads(response.body)
-        self.logger.debug("row==========={}".format(rows))
         for row in rows:
             item = CollectionItem()
             item['title'] = row['title']
@@ -83,8 +86,13 @@ class CollectionSpider(CommonSpider):
     def parse_article(self, response):
         item = response.request.meta['item']
         res = Selector(response)
-        self.logger.debug("res.css('.show-content')=========={}".format(
-            res.css('.show-content')))
-        item['content'] = res.css('.show-content').extract_first()
+        item['content'] = self.tran_urls(res.css('.show-content').extract_first(), response.request.url)
         item['wordCount'] = res.css('.wordage').re_first(ur'(\d+)') or 0
         yield item
+
+    def tran_urls(self, content_html, base_url):
+        content = "{}".format(content_html)
+        relative_urls_re = re.compile(r'(<\s*[img|a][^>-]+[href|src]\s*=\s*["\']?)(?!http)([^"\'>]+)',
+                                      re.IGNORECASE | re.UNICODE)
+        content = relative_urls_re.sub(lambda m: m.group(1) + urlparse.urljoin(base_url, m.group(2)), content)
+        return content
