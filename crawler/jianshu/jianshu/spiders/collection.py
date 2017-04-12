@@ -86,11 +86,24 @@ class CollectionSpider(CommonSpider):
     def parse_article(self, response):
         item = response.request.meta['item']
         res = Selector(response)
-        item['content'] = self.tran_urls(res.css('.show-content').extract_first(), response.request.url)
+        item['content'] = self.sanitate(res.css('.show-content').extract_first(), response)
         item['wordCount'] = res.css('.wordage').re_first(ur'(\d+)') or 0
         yield item
 
-    def tran_urls(self, content_html, base_url):
+    def sanitate(self, content, response):
+        t = self.tran_urls(content, response.request.url)
+        return self.filter_special_character(t)
+
+    @staticmethod
+    def filter_special_character(content):
+        """ http://www.cnblogs.com/rrooyy/p/5349978.html
+            http://www.jianshu.com/p/d01618b8f104
+            line separator cause phantomjs error when executing javascript
+        """
+        return content.replace('\u2028', '')
+
+    @staticmethod
+    def tran_urls(content_html, base_url):
         content = "{}".format(content_html)
         relative_urls_re = re.compile(r'(<\s*[img|a][^>-]+[href|src]\s*=\s*["\']?)(?!http)([^"\'>]+)',
                                       re.IGNORECASE | re.UNICODE)
