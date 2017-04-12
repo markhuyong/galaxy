@@ -8,7 +8,7 @@ NEWSPIDER_MODULE = 'weibo.spiders'
 DOWNLOADER_MIDDLEWARES = {
     # Engine side
     'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 441,
-    'crawler.misc.middleware.proxy.CustomHttpProxyFromRedisMiddleware': 443,
+    # 'crawler.misc.middleware.proxy.CustomHttpProxyFromRedisMiddleware': 443,
     'weibo.middleware.CookiesMiddleware': 445,
     # Downloader side
 }
@@ -51,3 +51,5 @@ RETRY_TIMES = 3
 
 # Retry on most error codes since proxies fail for different reasons
 RETRY_HTTP_CODES = [500, 502, 503, 504, 400, 403, 404, 408]
+
+ADSL = False

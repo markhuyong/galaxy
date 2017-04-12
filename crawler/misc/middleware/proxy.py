@@ -14,6 +14,7 @@ class CustomHttpProxyFromRedisMiddleware(object):
             crawler.settings.get('REDIS_DB', 0),
             crawler.settings.get('REDIS_PASS', None)))
         self.redis_key = "http:proxies"
+        self.adsl = crawler.settings.get('ADSL', False)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -23,12 +24,17 @@ class CustomHttpProxyFromRedisMiddleware(object):
         # TODO implement complex proxy providing algorithm
         if self.use_proxy(request):
             try:
-                if self.rconn.scard(self.redis_key) < 2:
-                    self.update_proxy(spider)
-                if request.meta.get('retry_times', 0):
-                    ban_proxy = request.meta.get('proxy', '').replace("http://", '')
-                    self.rconn.srem(self.redis_key, ban_proxy)
-                request.meta['proxy'] = "http://%s" % self.rconn.srandmember(self.redis_key)
+                if not self.adsl:
+                    if self.rconn.scard(self.redis_key) < 2:
+                        self.update_proxy(spider)
+                    if request.meta.get('retry_times', 0):
+                        ban_proxy = request.meta.get('proxy', '').replace("http://", '')
+                        self.rconn.srem(self.redis_key, ban_proxy)
+                    request.meta['proxy'] = "http://%s" % self.rconn.srandmember(self.redis_key)
+                else:
+                    # url = 'http://127.0.0.1:5000'
+                    url = 'http://139.196.182.47:5000'
+                    request.meta['proxy'] = "http://%s" % requests.get(url, auth=('admin', '123456')).text
                 spider.logger.debug("http proxy is {}".format(request.meta['proxy']))
             except Exception, e:
                 spider.logger.critical("Exception %s" % e)
@@ -38,11 +44,13 @@ class CustomHttpProxyFromRedisMiddleware(object):
         using direct download for depth <= 2
         using proxy with probability 0.3
         """
+        if self.adsl:
+            return True
         if "depth" in request.meta and int(request.meta['depth']) <= 2:
             return False
         i = random.randint(1, 10)
         return i <= 2
-        # return True
+
 
     def update_proxy(self, spider):
         url = "http://3360623093271490.standard.hutoudaili.com/?num=10&area_type=1&ports=8123&anonymity=3&order=1"
