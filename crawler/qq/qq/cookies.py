@@ -140,7 +140,7 @@ def updateCookie(accountText, rconn, spider):
     prefix = BaseHelper.get_cookie_key_prefix(spider)
     account = accountText.split("--")[0]
     password = accountText.split("--")[1]
-    cookie = getCookie(account, password)
+    cookie = getCookie(account, password, spider)
     if len(cookie) > 0:
         spider.logger.warning(
             "The cookie of %s has been updated successfully!" % account)
