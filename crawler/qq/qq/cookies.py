@@ -18,11 +18,11 @@ from yundama import identify
     建议买几十个，实际生产建议100+，微博反爬得厉害，太频繁了会出现302转移。
 """
 my_qq = [
-    # ('1544269229', '1rwi4o8d'),
-    ('3246800755', 'huhongle79'),
+    ('914095005', 'mike110_110'),
+    # ('3246800755', 'huhongle79'),
 ]
 
-IDENTIFY = 2  # 验证码输入方式:        1:看截图aa.png，手动输入     2:云打码
+IDENTIFY = 1  # 验证码输入方式:        1:看截图aa.png，手动输入     2:云打码
 
 def getCookie(account, password, spider):
     """ 获取一个账号的Cookie """
@@ -68,7 +68,7 @@ def getCookie(account, password, spider):
                         if IDENTIFY == 1:
                             try:
                                 from PIL import Image
-                                im = Image.open("aa.png")
+                                im = Image.open("verification.png")
                                 im.show()
                                 im.close()
                             except:

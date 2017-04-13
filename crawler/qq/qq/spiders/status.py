@@ -1,11 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import json
-from scrapy.http.request import Request
+import sys
 from datetime import datetime
+
+import requests
 from dateutil.tz import tzlocal
+from scrapy.http.request import Request
+
 from ..items import QqStatusItem
+
+try:
+    from cStringIO import StringIO as BytesIO
+except ImportError:
+    from io import BytesIO
+from PIL import Image
 
 from ..utils import CommonSpider
 from ..utils import BaseHelper
@@ -60,9 +69,18 @@ class QqStatusSpider(CommonSpider):
                         pass
                     if cursor is not None:
                         url = cursor['url'].split('&', 1)[0]
-                        width = 360 if cursor['width'] == 0 else cursor['width']
-                        height = 360 if cursor['height'] == 0 else cursor['height']
-
+                        width = cursor['width']
+                        height = cursor['height']
+                        if not (width or height):
+                            try:
+                                session = requests.Session()
+                                orig_image = Image.open(BytesIO(session.get(url).content))
+                                width, height = orig_image.size
+                            except Exception:
+                                if not width:
+                                    width = 360
+                                if not height:
+                                    height = 360
                         pictures += [{
                             "url": url,
                             "width": width,
