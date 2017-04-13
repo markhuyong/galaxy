@@ -60,8 +60,8 @@ class QqStatusSpider(CommonSpider):
                         pass
                     if cursor is not None:
                         url = cursor['url'].split('&', 1)[0]
-                        width = cursor['width']
-                        height = cursor['height']
+                        width = 360 if cursor['width'] == 0 else cursor['width']
+                        height = 360 if cursor['height'] == 0 else cursor['height']
 
                         pictures += [{
                             "url": url,
