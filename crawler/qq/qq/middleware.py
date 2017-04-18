@@ -78,7 +78,7 @@ class CookiesMiddleware(RetryMiddleware):
             reason = response_status_message(response.status)
             return self._retry(request, reason, spider) or response
             # os.system("pause")
-        elif u'登录态失效，请重新登录' in response.body:
+        elif u'登录态失效，请重新登录' in response.body or u'请先登录' in response.body:
             spider.logger.warning("One Cookie need to be updating...")
             updateCookie(request.meta['accountText'], self.rconn,
                          spider)
