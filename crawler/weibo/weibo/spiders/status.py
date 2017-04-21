@@ -198,15 +198,13 @@ class WeiboStatusSpider(CommonSpider):
             return str(date.today().year) + '-' + match.replace(u'月', '-') \
                 .replace(u'日', '')
 
-        pattern = re.compile(u'今天 (\d{1,2}:\d{1,2})')
+        pattern = re.compile(u'今天.*(\d{1,2}:\d{1,2})')
         matches_list = pattern.findall(time_str)
         for match in matches_list:
             return str(date.today()) + ' ' + match
 
-        pattern = re.compile(u'(\d{1,2})分钟前')
+        pattern = re.compile(u'(\d{1,2}).*分钟前')
         matches_list = pattern.findall(time_str)
         for match in matches_list:
-            return str(
-                (datetime.now() - timedelta(minutes=int(match))).strftime(
-                    "%Y-%m-%d %H:%M:%S"))
+            return (datetime.now() - timedelta(minutes=int(match))).strftime("%Y-%m-%d %H:%M:%S")
         return time_str
