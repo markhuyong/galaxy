@@ -92,6 +92,7 @@ class CollectionSpider(CommonSpider):
 
     def sanitate(self, content, response):
         t = self.tran_urls(content, response.request.url)
+        t = self.strip_p_tag(t)
         return self.filter_special_character(t)
 
     @staticmethod
@@ -108,4 +109,15 @@ class CollectionSpider(CommonSpider):
         relative_urls_re = re.compile(r'(<\s*[img|a][^>-]+[href|src]\s*=\s*["\']?)(?!http)([^"\'>]+)',
                                       re.IGNORECASE | re.UNICODE)
         content = relative_urls_re.sub(lambda m: m.group(1) + urlparse.urljoin(base_url, m.group(2)), content)
+        return content
+
+    @staticmethod
+    def strip_p_tag(content):
+        """
+        strip left most whitespace
+        :param content:
+        :return:
+        """
+        p_tag_re = re.compile(r'(<p[^>]*>(?:<b>)?)(.*?)(</p>)', re.IGNORECASE | re.UNICODE)
+        content = p_tag_re.sub(lambda m: m.group(1) + m.group(2).lstrip(' \xc2\xa0') + m.group(3), content)
         return content
