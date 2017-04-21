@@ -103,12 +103,17 @@ class WeiboStatusSpider(CommonSpider):
 
             # parse text
             item['text'] = ''
-            if 'raw_text' in card['mblog']:
-                item['text'] = card['mblog']['raw_text']
+
+            if not card['mblog'].get('isLongText'):
+                if 'raw_text' in card['mblog']:
+                    item['text'] = card['mblog']['raw_text']
+                else:
+                    item['text'] = remove_tags(card['mblog']['text'])
             else:
-                item['text'] = remove_tags(card['mblog']['text'])
+                item['text'] = self._get_long_text(card['mblog']['id'])
 
             if 'retweeted_status' in card['mblog']:
+                isLongText = card['mblog']['retweeted_status'].get('isLongText')
                 self.logger.debug('retweeted_status ====={}'.format(card['mblog']['retweeted_status']))
                 user = card['mblog']['retweeted_status'].get('user')
                 if user:
@@ -116,8 +121,11 @@ class WeiboStatusSpider(CommonSpider):
                         'screen_name']
                     item['text'] += "@{}".format(screen_name)
 
-                text = remove_tags(card['mblog']['retweeted_status']['text'])
-                item['text'] += text.replace(u"...全文", '')
+                if not isLongText:
+                    text = remove_tags(card['mblog']['retweeted_status']['text'])
+                    item['text'] += text
+                else:
+                    item['text'] += self._get_long_text(card['mblog']['retweeted_status']['id'])
 
             # parse pics
             item['pictures'] = []
@@ -165,6 +173,18 @@ class WeiboStatusSpider(CommonSpider):
                                   callback=self.parse_weibo)
                 request.meta['cookiejar'] = response.meta['cookiejar']
                 yield request
+
+    def _get_long_text(self, text_id):
+        import requests
+        try:
+            session = requests.Session()
+            url = BaseHelper.get_m_weibo_long_text(text_id)
+            body = session.get(url).content
+            status = json.loads(body)
+            return status.get('longTextContent')
+        except Exception, e:
+            return ''
+
 
     def _parse_publish_time(self, time_str):
         pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
