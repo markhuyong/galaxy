@@ -81,11 +81,13 @@ class QqStatusSpider(CommonSpider):
                                     width = 360
                                 if not height:
                                     height = 360
-                        pictures += [{
-                            "url": url,
-                            "width": width,
-                            "height": height
-                        }]
+
+                        if not url.strip():
+                            pictures += [{
+                                "url": url,
+                                "width": width,
+                                "height": height
+                            }]
 
                 item['pictures'] = pictures
 
