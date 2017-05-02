@@ -73,8 +73,15 @@ class WeiboStatusSpider(CommonSpider):
     def parse_weibo_containerid(self, response):
         body = json.loads(response.body)
         for tab in body['tabsInfo']['tabs']:
-            if tab.get('tab_type') == "weibo":
+            if isinstance(tab, dict) and tab.get('tab_type') == u"weibo":
                 self.containerid = tab['containerid']
+                break
+            elif isinstance(body['tabsInfo']['tabs'][tab], dict) and body['tabsInfo']['tabs'][tab].get('tab_type') == u"weibo":
+                self.containerid = body['tabsInfo']['tabs'][tab]['containerid']
+                break
+            else:
+                pass
+
         if self.containerid == 0:
             ValueError("get weibo containerid failed.")
 
