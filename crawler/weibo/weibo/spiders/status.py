@@ -72,15 +72,20 @@ class WeiboStatusSpider(CommonSpider):
 
     def parse_weibo_containerid(self, response):
         body = json.loads(response.body)
-        for tab in body['tabsInfo']['tabs']:
-            if isinstance(tab, dict) and tab.get('tab_type') == u"weibo":
-                self.containerid = tab['containerid']
-                break
-            elif isinstance(body['tabsInfo']['tabs'][tab], dict) and body['tabsInfo']['tabs'][tab].get('tab_type') == u"weibo":
-                self.containerid = body['tabsInfo']['tabs'][tab]['containerid']
-                break
-            else:
-                pass
+        tabs = body['tabsInfo'].get('tabs')
+
+        if isinstance(tabs, dict):
+            for tab in tabs.iteritems():
+                if tab.get('tab_type') == u"weibo":
+                    self.containerid = tab['containerid']
+                    break
+        elif isinstance(tabs, list):
+            for tab in tabs:
+                if tab.get('tab_type') == u"weibo":
+                    self.containerid = tab['containerid']
+                    break
+        else:
+            pass
 
         if self.containerid == 0:
             ValueError("get weibo containerid failed.")
@@ -191,7 +196,6 @@ class WeiboStatusSpider(CommonSpider):
             return status.get('longTextContent')
         except Exception, e:
             return ''
-
 
     def _parse_publish_time(self, time_str):
         pattern = re.compile(u'(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})')
