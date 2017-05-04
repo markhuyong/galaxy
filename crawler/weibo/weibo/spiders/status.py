@@ -75,7 +75,7 @@ class WeiboStatusSpider(CommonSpider):
         tabs = body['tabsInfo'].get('tabs')
 
         if isinstance(tabs, dict):
-            for tab in tabs.iteritems():
+            for tab in tabs.itervalues():
                 if tab.get('tab_type') == u"weibo":
                     self.containerid = tab['containerid']
                     break
