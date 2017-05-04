@@ -68,21 +68,21 @@ class QqStatusSpider(CommonSpider):
                     else:
                         pass
                     if cursor is not None:
-                        url = cursor['url'].split('&', 1)[0]
-                        width = cursor['width']
-                        height = cursor['height']
-                        if not (width or height):
-                            try:
-                                session = requests.Session()
-                                orig_image = Image.open(BytesIO(session.get(url).content))
-                                width, height = orig_image.size
-                            except Exception:
-                                if not width:
-                                    width = 360
-                                if not height:
-                                    height = 360
+                        url = cursor['url'].split('&', 1)[0].strip()
+                        if url:
+                            width = cursor['width']
+                            height = cursor['height']
+                            if not (width or height):
+                                try:
+                                    session = requests.Session()
+                                    orig_image = Image.open(BytesIO(session.get(url).content))
+                                    width, height = orig_image.size
+                                except Exception:
+                                    if not width:
+                                        width = 360
+                                    if not height:
+                                        height = 360
 
-                        if not url.strip():
                             pictures += [{
                                 "url": url,
                                 "width": width,
