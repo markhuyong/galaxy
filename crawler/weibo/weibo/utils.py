@@ -12,13 +12,13 @@ sys.setdefaultencoding('utf8')
 
 
 class BaseHelper(object):
-    WEIBO_LIST_PAGE_URL_PREFIX = "http://weibo.cn/u/{uid}?page={page}"
-    WEIBO_SEARCH_URL = "http://weibo.cn/search/user/?keyword={nick_name}"
-    M_WEIBO_HOME_URL = "http://m.weibo.cn/u/{uid}"
-    M_WEIBO_STATUS_URL = "http://m.weibo.cn/container/getIndex?type=uid&value={uid}&containerid={cid}&page={page}"
-    M_WEIBO_USER_URL = "http://m.weibo.cn/n/{nick_name}"
-    M_WEIBO_USER_INFO_URL = "http://m.weibo.cn/container/getIndex?type=uid&value={uid}"
-    M_WEIBO_LONG_TEXT = "http://m.weibo.cn/statuses/extend?id={text_id}"
+    WEIBO_LIST_PAGE_URL_PREFIX = "https://weibo.cn/u/{uid}?page={page}"
+    WEIBO_SEARCH_URL = "https://weibo.cn/search/user/?keyword={nick_name}"
+    M_WEIBO_HOME_URL = "https://m.weibo.cn/u/{uid}"
+    M_WEIBO_STATUS_URL = "https://m.weibo.cn/container/getIndex?type=uid&value={uid}&containerid={cid}&page={page}"
+    M_WEIBO_USER_URL = "https://m.weibo.cn/n/{nick_name}"
+    M_WEIBO_USER_INFO_URL = "https://m.weibo.cn/container/getIndex?type=uid&value={uid}"
+    M_WEIBO_LONG_TEXT = "https://m.weibo.cn/statuses/extend?id={text_id}"
 
     @classmethod
     def get_headers(cls):

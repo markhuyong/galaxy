@@ -301,10 +301,13 @@ def getCookie_old(account, password, spider):
 def getCookie(account, password, spider):
     """ 获取一个账号的Cookie """
     dcap = dict(DesiredCapabilities.PHANTOMJS)  # PhantomJS需要使用老版手机的user-agent，不然验证码会无法通过
-    dcap["phantomjs.page.settings.userAgent"] = BaseHelper.random_user_agent()
+    dcap["phantomjs.page.settings.userAgent"] = (
+        "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
+    )
+    # dcap["phantomjs.page.settings.userAgent"] = BaseHelper.random_user_agent()
     try:
         browser = webdriver.PhantomJS(desired_capabilities=dcap)
-        browser.set_window_size(480, 320)
+        # browser.set_window_size(480, 320)
         browser.get("https://weibo.cn/login/")
         time.sleep(3)
         import os
@@ -317,15 +320,15 @@ def getCookie(account, password, spider):
         failure = 0
         while "微博" in browser.title and failure < 5:
             failure += 1
-            username = browser.find_element_by_name("mobile")
+            username = browser.find_element_by_id("loginName")
             username.clear()
             username.send_keys(account)
 
-            psd = browser.find_element_by_xpath('//input[@type="password"]')
+            psd = browser.find_element_by_id("loginPassword")
             psd.clear()
             psd.send_keys(password)
             try:
-                code = browser.find_element_by_name("code")
+                code = browser.find_element_by_id("loginVCode")
                 code.clear()
                 if IDENTIFY == 1:
                     try:
@@ -349,14 +352,19 @@ def getCookie(account, password, spider):
             except Exception, e:
                 pass
 
-            commit = browser.find_element_by_name("submit")
+            commit = browser.find_element_by_id("loginAction")
             commit.click()
             time.sleep(3)
-            if "我的首页" not in browser.title:
-                time.sleep(4)
+            time.sleep(4)
+            # if "我的首页" not in browser.title:
+            #     time.sleep(4)
+            # if '未激活微博' in browser.page_source:
+            #     print '账号未开通微博'
+            #     return {}
 
         cookie = {}
-        if "我的首页" in browser.title:
+        # if "我的首页" in browser.title or True:
+        if browser.title is not None:
             for elem in browser.get_cookies():
                 cookie[elem["name"]] = elem["value"]
                 spider.logger.warning("Get Cookie Success!( Account:%s )" % account)
