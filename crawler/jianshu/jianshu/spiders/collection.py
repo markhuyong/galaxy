@@ -101,7 +101,7 @@ class CollectionSpider(CommonSpider):
             http://www.jianshu.com/p/d01618b8f104
             line separator cause phantomjs error when executing javascript
         """
-        return content.replace('\u2028', '')
+        return content.replace('\u2028', '').encode('string-escape')
 
     @staticmethod
     def tran_urls(content_html, base_url):
