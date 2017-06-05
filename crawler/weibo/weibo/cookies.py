@@ -305,8 +305,8 @@ def getCookie(account, password, spider):
         "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
     )
     # dcap["phantomjs.page.settings.userAgent"] = BaseHelper.random_user_agent()
+    browser = webdriver.PhantomJS(desired_capabilities=dcap)
     try:
-        browser = webdriver.PhantomJS(desired_capabilities=dcap)
         # browser.set_window_size(480, 320)
         browser.get("https://weibo.cn/login/")
         time.sleep(3)
