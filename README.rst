@@ -13,6 +13,15 @@ components (e.g. middleware, pipelines, extensions) are supported out of the box
 simply run galaxy in Scrapy project directory and it starts HTTP server allowing you
 to schedule your spiders and get spider output in JSON format.
 
+Install
+=============
+tar czf galaxy.tar.gz galaxy
+scp galaxy.tar.gz lebooks@39.108.102.79:/home/lebooks/galaxy.tar.gz
+sudo apt-get install python-dev
+sudo apt-get install python-lxml
+sudo pip install -r requirements.txt
+./start.sh
+./stop.sh
 
 Documentation
 =============
