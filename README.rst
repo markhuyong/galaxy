@@ -15,7 +15,7 @@ to schedule your spiders and get spider output in JSON format.
 
 Install
 =============
-::
+.. code-block:: shell
 
 tar czf galaxy.tar.gz galaxy
 scp galaxy.tar.gz lebooks@39.108.102.79:/home/lebooks/galaxy.tar.gz
