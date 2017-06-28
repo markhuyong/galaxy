@@ -65,14 +65,17 @@ class CollectionSpider(CommonSpider):
     def parse_collection(self, response):
         rows = json.loads(response.body)
         for row in rows:
+            row_data = row.get('object').get('data')
+            if not row_data:
+                break
             item = CollectionItem()
-            item['title'] = row['title']
-            item['url'] = "/p/{}".format(row['slug'])
-            item['publishTime'] = row['first_shared_at']
-            item['articleRead'] = row['views_count']
-            item['articleComment'] = row['public_comments_count']
-            item['articleLike'] = row['likes_count']
-            item['reward'] = row['total_rewards_count']
+            item['title'] = row_data.get('title')
+            item['url'] = "/p/{}".format(row_data.get('slug'))
+            item['publishTime'] = row_data.get('first_shared_at')
+            item['articleRead'] = row_data.get('views_count')
+            item['articleComment'] = row_data.get('public_comments_count')
+            item['articleLike'] = row_data.get('likes_count')
+            item['reward'] = row_data.get('total_rewards_count')
 
             article_url = BaseHelper.BASE + item['url']
             self.logger.debug("article_url==========={}".format(article_url))
