@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = 'qq.spiders'
 
 DOWNLOADER_MIDDLEWARES = {
     # Engine side
-    # 'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
+    'crawler.misc.middleware.agent.CustomUserAgentMiddleware': 401,
     'qq.middleware.CookiesMiddleware': 402,
 }
 
@@ -28,7 +28,7 @@ FILTER_HOST = 'localhost'
 FILTER_PORT = 6379
 FILTER_DB = 0
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
+# USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
 # COOKIES_ENABLED = True
 COOKIES_DEBUG = True
 
