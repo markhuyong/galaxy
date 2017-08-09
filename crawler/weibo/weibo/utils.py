@@ -19,6 +19,7 @@ class BaseHelper(object):
     M_WEIBO_USER_URL = "https://m.weibo.cn/n/{nick_name}"
     M_WEIBO_USER_INFO_URL = "https://m.weibo.cn/container/getIndex?type=uid&value={uid}"
     M_WEIBO_LONG_TEXT = "https://m.weibo.cn/statuses/extend?id={text_id}"
+    M_WEIBO_SINGLE_STATUS = "https://m.weibo.cn/{container_id}/{mid}"
 
     @classmethod
     def get_headers(cls):
@@ -96,6 +97,10 @@ class BaseHelper(object):
     @classmethod
     def get_m_weibo_long_text(cls, text_id):
         return cls.M_WEIBO_LONG_TEXT.format(text_id=text_id)
+
+    @classmethod
+    def get_m_weibo_single_status(cls, container_id, mid):
+        return cls.M_WEIBO_SINGLE_STATUS.format(container_id=container_id, mid=mid)
 
     @staticmethod
     def get_cookie_key_prefix(spider):

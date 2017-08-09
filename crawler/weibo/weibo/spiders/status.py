@@ -103,71 +103,19 @@ class WeiboStatusSpider(CommonSpider):
         try:
             body = json.loads(response.body)
         except ValueError:
-            raise ResponseFailed("Respone is not json format.")
+            raise ResponseFailed("Response is not json format.")
 
-        self.logger.debug("body======{}".format(body))
+        # self.logger.debug("body======{}".format(body))
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
-            item = WeiboStatusItem()
-            self.logger.debug("publishTime is {}".format(card['mblog']['created_at']))
-            item['publishTime'] = date_parse(
-                self._parse_publish_time(card['mblog']['created_at']), fuzzy_with_tokens=True)[0].isoformat()
-
-            # parse text
-            item['text'] = ''
-
-            if not card['mblog'].get('isLongText'):
-                if 'raw_text' in card['mblog']:
-                    item['text'] = card['mblog']['raw_text']
-                else:
-                    item['text'] = remove_tags(card['mblog']['text'])
-            else:
-                item['text'] = self._get_long_text(card['mblog']['id'])
-
-            if 'retweeted_status' in card['mblog']:
-                isLongText = card['mblog']['retweeted_status'].get('isLongText')
-                self.logger.debug('retweeted_status ====={}'.format(card['mblog']['retweeted_status']))
-                user = card['mblog']['retweeted_status'].get('user')
-                if user:
-                    screen_name = card['mblog']['retweeted_status']['user'][
-                        'screen_name']
-                    item['text'] += "@{}".format(screen_name)
-
-                if not isLongText:
-                    text = remove_tags(card['mblog']['retweeted_status']['text'])
-                    item['text'] += text
-                else:
-                    item['text'] += self._get_long_text(card['mblog']['retweeted_status']['id'])
-
-            # parse pics
-            item['pictures'] = []
-            pics = []
-            if 'retweeted_status' in card['mblog']:
-                pics = card['mblog']['retweeted_status'].get('pics') or []
-
-            else:
-                pics = card['mblog'].get('pics') or []
-            for pic in pics:
-                geo = pic['large']['geo']
-                if geo:
-                    p = {"url": pic['large']['url'],
-                         "width": pic['large']['geo']['width'],
-                         "height": pic['large']['geo']['height']
-                         }
-                else:
-                    size = pic['large']['size']
-                    if size == "large":
-                        p = {"url": pic['large']['url'],
-                             "width": 360,
-                             "height": 360
-                             }
-                    else:
-                        p = {"url": pic['large']['url'],
-                             "width": 180,
-                             "height": 180
-                             }
-                item['pictures'] += [p]
-            yield item
+            mid = card['mblog']['mid']
+            status_url = BaseHelper.get_m_weibo_single_status(self.containerid,
+                                                              mid)
+            headers = BaseHelper.get_status_headers(self.uid)
+            request = Request(status_url,
+                              headers=headers,
+                              callback=self.parse_weibo_status)
+            yield request
 
             next_page = body['cardlistInfo']['page']
 
@@ -185,6 +133,83 @@ class WeiboStatusSpider(CommonSpider):
                                   callback=self.parse_weibo)
                 request.meta['cookiejar'] = response.meta['cookiejar']
                 yield request
+
+    def parse_weibo_status(self, response):
+        STATUS_REGEXP = "var \$render_data = \[(\{.*\})\]\[0\]"
+
+        body_str = str(response.body)
+        matcher = re.findall(STATUS_REGEXP, body_str, re.S)
+
+        if matcher:
+            try:
+                s = str(matcher.pop())
+                # self.logger.debug("the STATUS_REGEXP matcher string is {}".format(s))
+                card = json.loads(s)
+                yield self._get_item(card)
+            except ValueError:
+                raise ResponseFailed("Response card matcher is not json format.")
+
+    def _get_item(self, card):
+        item = WeiboStatusItem()
+        self.logger.debug("publishTime is {}".format(card['status']['created_at']))
+        item['publishTime'] = date_parse(
+            self._parse_publish_time(card['status']['created_at']), fuzzy_with_tokens=True)[0].isoformat()
+
+        # parse text
+        item['text'] = ''
+
+        if not card['status'].get('isLongText'):
+            if 'raw_text' in card['status']:
+                item['text'] = card['status']['raw_text']
+            else:
+                item['text'] = remove_tags(card['status']['text'])
+        else:
+            item['text'] = self._get_long_text(card['status']['id'])
+
+        if 'retweeted_status' in card['status']:
+            isLongText = card['status']['retweeted_status'].get('isLongText')
+            self.logger.debug('retweeted_status ====={}'.format(card['status']['retweeted_status']))
+            user = card['status']['retweeted_status'].get('user')
+            if user:
+                screen_name = card['status']['retweeted_status']['user'][
+                    'screen_name']
+                item['text'] += "@{}".format(screen_name)
+
+            if not isLongText:
+                text = remove_tags(card['status']['retweeted_status']['text'])
+                item['text'] += text
+            else:
+                item['text'] += self._get_long_text(card['status']['retweeted_status']['id'])
+
+        # parse pics
+        item['pictures'] = []
+        pics = []
+        if 'retweeted_status' in card['status']:
+            pics = card['status']['retweeted_status'].get('pics') or []
+
+        else:
+            pics = card['status'].get('pics') or []
+        for pic in pics:
+            geo = pic['large']['geo']
+            if geo:
+                p = {"url": pic['large']['url'],
+                     "width": pic['large']['geo']['width'],
+                     "height": pic['large']['geo']['height']
+                     }
+            else:
+                size = pic['large']['size']
+                if size == "large":
+                    p = {"url": pic['large']['url'],
+                         "width": 360,
+                         "height": 360
+                         }
+                else:
+                    p = {"url": pic['large']['url'],
+                         "width": 180,
+                         "height": 180
+                         }
+            item['pictures'] += [p]
+            return item
 
     def _get_long_text(self, text_id):
         import requests

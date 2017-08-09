@@ -57,3 +57,8 @@ class TestWeiboStatusOffline(TestCase):
         text_css = response.css('.c[id^=M_EyP14odBh]')
         weibo_text = self.spider._parse_weibo_text(text_css)
         self.assertTrue(u'各位女神节日快乐' in weibo_text, "text is not in source")
+
+    def test_parse_weibo_status(self):
+        response = fake_response_from_file('../weibo/status.html')
+        weibo_status = self.spider.parse_weibo_status(response)
+        self.assertTrue(next(weibo_status)['publishTime'] is True, "item has publishTime")
