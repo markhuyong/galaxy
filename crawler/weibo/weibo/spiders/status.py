@@ -218,7 +218,7 @@ class WeiboStatusSpider(CommonSpider):
             url = BaseHelper.get_m_weibo_long_text(text_id)
             body = session.get(url).content
             status = json.loads(body)
-            return status.get('longTextContent')
+            return remove_tags(status.get('longTextContent'))
         except Exception, e:
             return ''
 
