@@ -15,6 +15,7 @@ try:
 except ImportError:
     from io import BytesIO
 from PIL import Image
+from w3lib.html import remove_tags
 
 from ..utils import CommonSpider
 from ..utils import BaseHelper
@@ -50,7 +51,7 @@ class QqStatusSpider(CommonSpider):
         for feed in body['data']['vFeeds']:
             item = QqStatusItem()
             item['publishTime'] = datetime.fromtimestamp(feed['comm']['time'], tzlocal()).isoformat()
-            item['text'] = feed['summary']['summary'] if 'summary' in feed else ''
+            item['text'] = remove_tags(feed['summary']['summary'] if 'summary' in feed else '')
             item['pictures'] = []
 
             # get photo urls
