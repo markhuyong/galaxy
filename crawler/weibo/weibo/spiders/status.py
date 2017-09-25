@@ -112,7 +112,9 @@ class WeiboStatusSpider(CommonSpider):
             # status_url = BaseHelper.get_m_weibo_single_status(self.containerid,
             #                                                   mid)
             status_url = BaseHelper.get_m_weibo_status_mid(mid)
+            headers = BaseHelper.get_single_status_headers(self.uid)
             request = Request(status_url,
+                              headers=headers,
                               callback=self.parse_weibo_status)
             yield request
 

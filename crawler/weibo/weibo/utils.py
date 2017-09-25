@@ -59,6 +59,19 @@ class BaseHelper(object):
             'Connection': 'keep-alive',
         })
 
+    @classmethod
+    def get_single_status_headers(cls, uid):
+        """
+        head for single status of weibo
+        :param uid:
+        :return:
+        """
+        return Headers({
+            'Accept-Encoding': 'gzip, deflate, sdch',
+            'Accept-Language': 'en-US,en;q=0.8,zh;q=0.6',
+            'Host': 'm.weibo.cn',
+            'Referer': cls.get_m_weibo_home_url(uid),
+        })
     @staticmethod
     def random_user_agent():
         return str(random.choice(mobile_agents.AGENTS))
