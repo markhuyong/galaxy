@@ -208,7 +208,7 @@ class WeiboStatusSpider(CommonSpider):
                          "height": 180
                          }
             item['pictures'] += [p]
-            return item
+        return item
 
     def _get_long_text(self, text_id):
         import requests
