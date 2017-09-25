@@ -109,8 +109,9 @@ class WeiboStatusSpider(CommonSpider):
 
         for card in filter(lambda c: c['card_type'] == 9, body['cards']):
             mid = card['mblog']['mid']
-            status_url = BaseHelper.get_m_weibo_single_status(self.containerid,
-                                                              mid)
+            # status_url = BaseHelper.get_m_weibo_single_status(self.containerid,
+            #                                                   mid)
+            status_url = BaseHelper.get_m_weibo_status_mid(mid)
             headers = BaseHelper.get_status_headers(self.uid)
             request = Request(status_url,
                               headers=headers,
