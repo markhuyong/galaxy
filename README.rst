@@ -19,7 +19,7 @@ Install
 
 tar czf galaxy.tar.gz galaxy
 
-scp galaxy.tar.gz lebooks@39.108.102.79:/home/lebooks/galaxy.tar.gz
+scp galaxy.tar.gz root@312.108.102.179:/home/project/galaxy.tar.gz
 
 sudo apt-get install python-dev
 
@@ -43,7 +43,4 @@ Support
 Open source support is provided here in Github. Please `create a question
 issue`_ (ie. issue with "question" label).
 
-Commercial support is also available by `lebooks`_.
-
 .. _create a question issue:
-.. _lebooks: http://lebooks.com
